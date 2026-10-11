@@ -144,6 +144,10 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
 #hand button.sel{transform:translateY(-16px)}
 #hand button.sel .tile{filter:drop-shadow(0 2px 0 var(--ivory-edge)) drop-shadow(0 0 8px var(--brass))}
 #hand button.shake{animation:shake .3s}
+#hand button.fly{animation:fly .3s cubic-bezier(.2,.9,.3,1.15)}
+@keyframes fly{from{transform:translate(var(--fx,0),var(--fy,-120px)) scale(.55) rotate(-14deg);opacity:.5}}
+.count.bump{animation:bump .25s}
+@keyframes bump{50%{transform:scale(1.3)}}
 @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 /* ---- overlays ---- */
@@ -738,7 +742,7 @@ function startAI() {
   G = { mode: "ai", me: 0, opp: { name: t("computer"), small: null, ai: true }, state: newGame(), level: diff };
   resetMarks(); show("game"); afterChange();
 }
-function resetMarks() { sel = null; lastChainLen = 0; lastMyCount = 0; lastPhase = null; lastFirst = null; closeSheet(); $("#endpick").hidden = true; }
+function resetMarks() { if (G) { stopDraw(); G.seen = null; } sel = null; lastChainLen = 0; lastMyCount = 0; lastPhase = null; lastFirst = null; closeSheet(); $("#endpick").hidden = true; }
 function currentView() { return G.mode === "guest" ? G.view : viewFor(G.state, G.me); }
 function act(a) {
   if (!G) return;
@@ -782,7 +786,7 @@ function afterChange() {
     const s = G.state;
     if (s.phase === "play" && s.turn === 1) {
       const canMove = movesFor(s.players[1].hand, s.chain).length > 0;
-      G.aiTimer = setTimeout(aiStep, canMove ? 850 : 480);
+      G.aiTimer = setTimeout(aiStep, (canMove ? 850 : 480) + drawPending());
     }
   }
 }
@@ -804,6 +808,8 @@ function render() {
   const myTurn = v.phase === "play" && v.turn === me;
   const myHand = v.players[me].hand || [];
   const mv = myTurn ? movesFor(myHand, v.chain) : [];
+  trackDraws(v, me, op);
+  const myPend = G.drawQ ? G.drawQ.mine.length : 0, opPend = G.drawQ ? G.drawQ.opp : 0;
 
   renderRound(v);
   setAvatar($("#oppAvatar"), nm[op], G.opp && G.opp.small, G.opp && G.opp.ai);
@@ -811,23 +817,23 @@ function render() {
   $("#oppName").textContent = nm[op]; $("#meName").textContent = nm[me];
   const sc = (n) => { const f = document.createDocumentFragment(); f.appendChild(el("b", null, String(n))); f.appendChild(document.createTextNode("/100")); return f; };
   $("#oppScore").replaceChildren(sc(v.players[op].score)); $("#meScore").replaceChildren(sc(v.players[me].score));
-  $("#oppCount").textContent = v.players[op].count; $("#meCount").textContent = v.players[me].count;
-  $("#oppBacks").innerHTML = "<i></i>".repeat(Math.min(v.players[op].count, 14));
+  $("#oppCount").textContent = v.players[op].count - opPend; $("#meCount").textContent = v.players[me].count - myPend;
+  $("#oppBacks").innerHTML = "<i></i>".repeat(Math.min(v.players[op].count - opPend, 14));
   $("#oppBar").classList.toggle("active", v.phase === "play" && v.turn === op);
   $("#meBar").classList.toggle("active", myTurn);
-  $("#pileCount").textContent = v.bone;
+  $("#pileCount").textContent = v.bone + myPend + opPend;
   $("#pile").classList.toggle("call", myTurn && !mv.length && v.bone > 0);
   $("#pile").style.opacity = v.bone ? 1 : .35;
 
   // sounds from observed changes
-  if (v.chain.length > lastChainLen) sfx("clack");
-  else if (v.phase === "play" && v.players[me].count > lastMyCount && lastChainLen === v.chain.length && lastPhase === "play") sfx("draw");
+  if (v.chain.length > lastChainLen) sfx("clack"); // draws make their own sound, one per tile
 
   // status line
   const st = $("#status"); st.textContent = "";
   if (v.phase === "play") {
     if (myTurn) {
-      if (!v.chain.length) st.textContent = t("playFirst");
+      if (myPend) st.textContent = t("mustDraw");
+      else if (!v.chain.length) st.textContent = t("playFirst");
       else if (mv.length) st.textContent = t("yourTurn");
       else if (v.bone > 0) { st.textContent = t("mustDraw"); autoDraw(); }
       else { st.appendChild(el("span", null, t("mustPass"))); st.appendChild(button("primary pass", t("pass"), () => act({ type: "pass" }))); }
@@ -836,7 +842,7 @@ function render() {
   if (sel && (!myTurn || !myHand.some(tl => key(tl) === sel))) sel = null;
 
   renderBoard(v, mv);
-  renderHand(myHand, myTurn, mv);
+  renderHand(myHand, myTurn, mv, G.drawQ ? new Set(G.drawQ.mine) : null);
 
   if (v.phase !== "play" && lastPhase === "play") { showResult(v); if (v.result && v.result.winner === me) sfx("win"); }
   else if (v.phase === "play" && lastPhase && lastPhase !== "play") closeSheet();
@@ -906,8 +912,9 @@ function renderBoard(v, mv) {
     $("#pickR").textContent = t("farEnd", { v: e[1] });
   } else pick.hidden = true;
 }
-function renderHand(hand, myTurn, mv) {
+function renderHand(hand, myTurn, mv, hidden) {
   const h = $("#hand"); h.textContent = "";
+  if (hidden) hand = hand.filter(tl => !hidden.has(key(tl)));
   const n = Math.max(hand.length, 1), W = h.clientWidth || 360;
   const w = Math.max(34, Math.min(W > 600 ? 80 : 50, Math.floor((W - 8 - (n - 1) * 6) / n)));
   h.classList.toggle("many", n * (w + 6) > W);
@@ -920,8 +927,41 @@ function renderHand(hand, myTurn, mv) {
     if (sel === k) b.classList.add("sel");
     b.addEventListener("click", () => onTileTap(k, b));
     h.appendChild(b);
+    if (G.fly === k) {
+      // start the flight at the draw pile
+      const pr = $("#pile").getBoundingClientRect(), br = b.getBoundingClientRect();
+      b.style.setProperty("--fx", Math.round(pr.left + pr.width / 2 - (br.left + br.width / 2)) + "px");
+      b.style.setProperty("--fy", Math.round(pr.top + pr.height / 2 - (br.top + br.height / 2)) + "px");
+      b.classList.add("fly"); G.fly = null;
+    }
   });
 }
+// Drawing several tiles at once happens in one step of the game, but showing 7 tiles appear at once is
+// confusing. Hand them over one by one from the pile instead (purely visual; the state is already final).
+const DRAW_STEP = 240;
+function trackDraws(v, me, op) {
+  const keys = (v.players[me].hand || []).map(key), prev = G.seen;
+  if (prev && prev.round === v.round && prev.phase === "play" && v.phase === "play" && prev.chain === v.chain.length) {
+    const fresh = keys.filter(k => !prev.keys.has(k)), oppUp = v.players[op].count - prev.opp;
+    if (fresh.length || oppUp > 0) queueDraw(fresh, Math.max(0, oppUp));
+  } else if (prev && prev.round !== v.round) stopDraw();
+  G.seen = { round: v.round, phase: v.phase, chain: v.chain.length, keys: new Set(keys), opp: v.players[op].count };
+}
+function queueDraw(mine, opp) {
+  const q = G.drawQ = G.drawQ || { mine: [], opp: 0, timer: null };
+  q.mine.push(...mine); q.opp += opp;
+  if (!q.timer) q.timer = setInterval(stepDraw, DRAW_STEP);
+}
+function stepDraw() {
+  const q = G && G.drawQ; if (!q) return;
+  if (q.mine.length) G.fly = q.mine.shift();
+  else if (q.opp > 0) { q.opp--; const c = $("#oppCount"); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+  sfx("draw");
+  if (!q.mine.length && !q.opp) stopDraw();
+  render();
+}
+function stopDraw() { if (G && G.drawQ) { clearInterval(G.drawQ.timer); G.drawQ = null; } }
+const drawPending = () => (G && G.drawQ ? (G.drawQ.mine.length + G.drawQ.opp) * DRAW_STEP : 0);
 function onTileTap(k, btn) {
   const v = currentView(); if (!v || v.phase !== "play") return;
   const shake = () => { btn.classList.remove("shake"); void btn.offsetWidth; btn.classList.add("shake"); };
@@ -967,7 +1007,7 @@ function showResult(v) {
   });
 }
 function leaveGame() {
-  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearTimeout(G.autoT); clearPend(); if (G.net) G.net.close(); }
+  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearTimeout(G.autoT); clearPend(); stopDraw(); if (G.net) G.net.close(); }
   G = null; closeSheet(); renderHome(); show("home");
 }
 $("#leaveBtn").addEventListener("click", () => {
