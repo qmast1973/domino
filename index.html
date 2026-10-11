@@ -65,6 +65,10 @@ h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .avatar.ai{background:var(--brass)}
 .avatar.big{width:112px;height:112px;font-size:44px;box-shadow:0 0 0 4px var(--ivory)}
+.crop{position:relative;width:min(280px,100%);aspect-ratio:1;margin:0 auto;border-radius:16px;overflow:hidden;touch-action:none;background:#000;cursor:grab}
+.crop canvas{display:block;width:100%;height:100%}
+.crop .ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--ivory);box-shadow:0 0 0 999px rgba(0,0,0,.55);pointer-events:none}
+.zoom{width:100%;accent-color:var(--brass)}
 
 /* ---- subpages ---- */
 .topbar{display:flex;align-items:center;gap:10px}
@@ -291,7 +295,7 @@ const T = {
     appName:"도미노", tagline:"100점에 먼저 닿는 사람이 승리", profileHint:"상대에게 보이는 이름과 사진", editProfile:"프로필 편집",
     easy:"쉬움", normal:"보통", playAI:"컴퓨터와 대결", playOnline:"온라인 대결", rules:"규칙 보기",
     photo:"사진 선택", removePhoto:"사진 지우기", name:"이름", save:"저장", cancel:"취소", saved:"저장했어요",
-    photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.",
+    photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.", cropTitle:"보일 부분 맞추기", cropHint:"사진을 끌어서 옮기고, 두 손가락이나 아래 막대로 크기를 맞추세요", done:"완료", zoom:"확대",
     defaultName:"나", computer:"컴퓨터",
     createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
     waiting:"상대를 기다리는 중", copyLink:"링크 복사", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
@@ -316,7 +320,7 @@ const T = {
     appName:"Dominoes", tagline:"First to 100 points wins", profileHint:"Name and photo your opponent sees", editProfile:"Edit profile",
     easy:"Easy", normal:"Normal", playAI:"Play the computer", playOnline:"Play online", rules:"How to play",
     photo:"Choose photo", removePhoto:"Remove photo", name:"Name", save:"Save", cancel:"Cancel", saved:"Saved",
-    photoFail:"That photo couldn't be read. Pick another one.",
+    photoFail:"That photo couldn't be read. Pick another one.", cropTitle:"Frame your photo", cropHint:"Drag to move. Pinch or use the slider to zoom.", done:"Done", zoom:"Zoom",
     defaultName:"Me", computer:"Computer",
     createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
     waiting:"Waiting for an opponent", copyLink:"Copy link", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
@@ -341,7 +345,7 @@ const T = {
     appName:"โดมิโน่", tagline:"ใครถึง 100 แต้มก่อนชนะ", profileHint:"ชื่อและรูปที่คู่แข่งเห็น", editProfile:"แก้ไขโปรไฟล์",
     easy:"ง่าย", normal:"ปกติ", playAI:"เล่นกับคอมพิวเตอร์", playOnline:"เล่นออนไลน์", rules:"วิธีเล่น",
     photo:"เลือกรูป", removePhoto:"ลบรูป", name:"ชื่อ", save:"บันทึก", cancel:"ยกเลิก", saved:"บันทึกแล้ว",
-    photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น",
+    photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น", cropTitle:"จัดตำแหน่งรูป", cropHint:"ลากเพื่อเลื่อน ใช้สองนิ้วหรือแถบด้านล่างเพื่อซูม", done:"เสร็จ", zoom:"ซูม",
     defaultName:"ฉัน", computer:"คอมพิวเตอร์",
     createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
     waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
@@ -591,29 +595,95 @@ $("#editProfileBtn").addEventListener("click", () => {
 $("#profileBack").addEventListener("click", () => show("home"));
 $("#removePhoto").addEventListener("click", () => { draft.avatar = draft.small = null; setAvatar($("#editAvatar"), $("#nameInput").value || myName(), null); });
 $("#nameInput").addEventListener("input", () => { if (!draft.avatar) setAvatar($("#editAvatar"), $("#nameInput").value || myName(), null); });
-function squareJpeg(img, size, quality) {
+// Photos from a phone camera can be huge. Decode once, shrink to a working copy, let the player pick
+// the visible part, then keep only a small crop (192px for the profile, ~48px for the opponent).
+async function decodePhoto(f) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(f); } catch (e) {} }
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(f), img = new Image();
+    img.onload = () => { res(img); setTimeout(() => URL.revokeObjectURL(url), 0); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src = url;
+  });
+}
+function shrink(src, max) {
+  const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+  if (!w || !h) throw new Error("empty");
+  const k = Math.min(1, max / Math.max(w, h)), c = document.createElement("canvas");
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+  if (src.close) src.close();
+  return c;
+}
+function cropJpeg(src, x, y, side, size, quality) {
   const c = document.createElement("canvas"); c.width = c.height = size;
-  const m = Math.min(img.naturalWidth, img.naturalHeight);
-  c.getContext("2d").drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, size, size);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, size, size);
+  g.drawImage(src, x, y, side, side, 0, 0, size, size);
   return c.toDataURL("image/jpeg", quality);
 }
-$("#photoInput").addEventListener("change", e => {
-  const f = e.target.files && e.target.files[0]; e.target.value = "";
-  if (!f) return;
-  const url = URL.createObjectURL(f), img = new Image();
-  img.onload = () => {
-    try {
-      draft.avatar = squareJpeg(img, 192, .85);
-      let q = .75, small = squareJpeg(img, 56, q);
-      while (small.length > 3000 && q > .2) { q -= .1; small = squareJpeg(img, 48, q); }
-      draft.small = small;
-      setAvatar($("#editAvatar"), "", draft.avatar);
-      $("#profileMsg").textContent = "";
-    } catch (err) { $("#profileMsg").textContent = t("photoFail"); }
-    URL.revokeObjectURL(url);
+function openCropper(work) {
+  const W = work.width, H = work.height, base = 1 / Math.min(W, H); // zoom 1 = the short side fills the frame
+  let zoom = 1, cx = W / 2, cy = H / 2; // centre of the frame, in image pixels
+  let canvas, S = 0;
+  const side = () => 1 / (base * zoom); // frame size in image pixels
+  const clamp = () => { const h = side() / 2; cx = Math.min(W - h, Math.max(h, cx)); cy = Math.min(H - h, Math.max(h, cy)); };
+  const draw = () => {
+    const box = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    S = box.width || 280;
+    if (canvas.width !== Math.round(S * dpr)) { canvas.width = canvas.height = Math.round(S * dpr); }
+    clamp();
+    const g = canvas.getContext("2d"), sd = side();
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    g.drawImage(work, cx - sd / 2, cy - sd / 2, sd, sd, 0, 0, canvas.width, canvas.height);
   };
-  img.onerror = () => { $("#profileMsg").textContent = t("photoFail"); URL.revokeObjectURL(url); };
-  img.src = url;
+  openSheet(sh => {
+    sh.appendChild(el("h2", null, t("cropTitle")));
+    const frame = el("div", "crop"); canvas = document.createElement("canvas"); frame.appendChild(canvas); frame.appendChild(el("div", "ring"));
+    sh.appendChild(frame);
+    const range = document.createElement("input"); range.type = "range"; range.className = "zoom"; range.min = "1"; range.max = "4"; range.step = "0.01"; range.value = "1"; range.setAttribute("aria-label", t("zoom"));
+    range.addEventListener("input", () => { zoom = +range.value; draw(); });
+    sh.appendChild(range);
+    sh.appendChild(el("p", "note", t("cropHint")));
+    const row = el("div", "row");
+    row.appendChild(button("ghost", t("cancel"), closeSheet));
+    row.appendChild(button("primary", t("done"), () => {
+      const sd = side(), x = cx - sd / 2, y = cy - sd / 2;
+      draft.avatar = cropJpeg(work, x, y, sd, 192, .82);
+      let q = .7, small = cropJpeg(work, x, y, sd, 56, q);
+      while (small.length > 3000 && q > .2) { q -= .1; small = cropJpeg(work, x, y, sd, 48, q); }
+      draft.small = small;
+      setAvatar($("#editAvatar"), "", draft.avatar); $("#profileMsg").textContent = "";
+      closeSheet();
+    }));
+    sh.appendChild(row);
+    // drag to move, two fingers (or the wheel) to zoom
+    const pts = new Map(); let last = null;
+    const setZoom = z => { zoom = Math.min(4, Math.max(1, z)); range.value = String(zoom); };
+    frame.addEventListener("pointerdown", e => { frame.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); last = null; });
+    frame.addEventListener("pointermove", e => {
+      if (!pts.has(e.pointerId)) return;
+      const prev = pts.get(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const k = side() / S;
+      if (pts.size === 1) { cx -= (e.clientX - prev.x) * k; cy -= (e.clientY - prev.y) * k; }
+      else {
+        const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (last) setZoom(zoom * d / last);
+        last = d;
+      }
+      draw();
+    });
+    const up = e => { pts.delete(e.pointerId); last = null; };
+    frame.addEventListener("pointerup", up); frame.addEventListener("pointercancel", up);
+    frame.addEventListener("wheel", e => { e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); draw(); }, { passive: false });
+  });
+  requestAnimationFrame(draw);
+}
+$("#photoInput").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try { openCropper(shrink(await decodePhoto(f), 1200)); }
+  catch (err) { $("#profileMsg").textContent = t("photoFail"); }
+  finally { e.target.value = ""; }
 });
 $("#saveProfile").addEventListener("click", () => {
   profile = { name: $("#nameInput").value.trim().slice(0, 20), avatar: draft.avatar, small: draft.small };
