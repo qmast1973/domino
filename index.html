@@ -29,7 +29,7 @@ html,body{height:100%}
 body{background:var(--wood);color:var(--text);font-family:var(--f-body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--brass);outline-offset:2px}
-.screen{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-inline:16px;padding-block:12px;box-sizing:border-box;gap:12px}
+.screen{height:100%;display:flex;flex-direction:column;max-width:640px;margin:0 auto;padding-inline:16px;padding-block:12px;box-sizing:border-box;gap:12px}
 h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
 
 /* ---- buttons ---- */
@@ -88,7 +88,7 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 
 /* ---- game ---- */
-#game{gap:8px;padding-block:8px}
+#game{gap:8px;padding-block:8px;max-width:none}
 .pbar{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:16px;background:rgba(0,0,0,.18);transition:box-shadow .25s}
 .pbar.active{box-shadow:0 0 0 2px var(--brass),0 0 18px rgba(224,174,79,.35)}
 .pbar .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -295,7 +295,7 @@ const T = {
     createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
     waiting:"상대를 기다리는 중", copyLink:"링크 복사", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
     connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", notFound:"그 코드의 방을 찾지 못했어요. 방을 만든 폰에서 게임 화면이 켜져 있는지 확인하세요.", selfJoin:"내가 만든 방이에요. 상대의 폰에서 이 코드로 참가해야 해요.", keepOpen:"코드를 보낸 뒤 이 화면으로 돌아와 켜 두세요.", badCode:"방 코드 5자리를 입력하세요.",
-    onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.",
+    onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.", relay:"중계 연결",
     round:"{r}판", yourTurn:"내 차례예요", oppTurn:"{n}의 차례", playFirst:"아무 패나 놓아 시작하세요",
     mustDraw:"낼 패가 없어요. 더미를 눌러 한 장 뽑으세요", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
     chooseEnd:"어느 쪽 끝에 붙일까요?", startEnd:"앞쪽 끝 {v}", farEnd:"뒤쪽 끝 {v}",
@@ -320,7 +320,7 @@ const T = {
     createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
     waiting:"Waiting for an opponent", copyLink:"Copy link", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
     connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", notFound:"No table with that code. Make sure the host still has the game open.", selfJoin:"That's your own table. Your opponent joins with this code on their phone.", keepOpen:"After sending the code, come back and keep this screen open.", badCode:"Enter the 5-letter table code.",
-    onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.",
+    onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.", relay:"relayed",
     round:"Round {r}", yourTurn:"Your turn", oppTurn:"{n}'s turn", playFirst:"Play any tile to start",
     mustDraw:"No move. Tap the pile to draw a tile", mustPass:"No move and nothing left to draw", pass:"Pass",
     chooseEnd:"Which end?", startEnd:"Start end {v}", farEnd:"Far end {v}",
@@ -345,7 +345,7 @@ const T = {
     createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
     waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
     connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", notFound:"ไม่พบห้องรหัสนี้ ตรวจสอบว่าผู้สร้างห้องยังเปิดหน้าเกมอยู่", selfJoin:"นี่คือห้องของคุณเอง ให้คู่แข่งใช้รหัสนี้บนโทรศัพท์ของเขา", keepOpen:"ส่งรหัสแล้วกลับมาเปิดหน้านี้ค้างไว้", badCode:"กรอกรหัสห้อง 5 ตัว",
-    onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว",
+    onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว", relay:"ผ่านรีเลย์",
     round:"รอบที่ {r}", yourTurn:"ตาของคุณ", oppTurn:"ตาของ {n}", playFirst:"วางไพ่ใบใดก็ได้เพื่อเริ่ม",
     mustDraw:"ไม่มีไพ่ลง แตะกองเพื่อจั่ว", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
     chooseEnd:"จะต่อด้านไหน?", startEnd:"ด้านต้น {v}", farEnd:"ด้านปลาย {v}",
@@ -465,6 +465,11 @@ function endRound(s, reason) {
   s.nextStarter = winner != null ? winner : 1 - s.turn;
   s.phase = s.players.some(p => p.score >= s.target) ? "over" : "roundEnd";
 }
+function place(chain, tl, side) {
+  if (!chain.length) chain.push([tl[0], tl[1]]);
+  else if (side === "L") { const L = chain[0][0]; chain.unshift(tl[1] === L ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
+  else { const R = chain[chain.length - 1][1]; chain.push(tl[0] === R ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
+}
 function applyAction(s, pi, a) {
   if (!a || typeof a !== "object") return false;
   if (a.type === "next") { if (s.phase !== "roundEnd") return false; startRound(s); return true; }
@@ -478,9 +483,7 @@ function applyAction(s, pi, a) {
     const m = mv.find(x => x.tile === a.tile && x.side === a.side);
     if (!m) return false;
     const idx = me.hand.findIndex(tl => key(tl) === a.tile), tl = me.hand[idx];
-    if (!s.chain.length) s.chain.push([tl[0], tl[1]]);
-    else if (a.side === "L") { const L = s.chain[0][0]; s.chain.unshift(tl[1] === L ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
-    else { const R = s.chain[s.chain.length - 1][1]; s.chain.push(tl[0] === R ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
+    place(s.chain, tl, a.side);
     me.hand.splice(idx, 1); s.passes = 0;
     if (!me.hand.length) endRound(s, "domino"); else s.turn = 1 - pi;
     return true;
@@ -635,9 +638,32 @@ function resetMarks() { sel = null; lastChainLen = 0; lastMyCount = 0; lastPhase
 function currentView() { return G.mode === "guest" ? G.view : viewFor(G.state, G.me); }
 function act(a) {
   if (!G) return;
-  if (G.mode === "guest") { G.net && G.net.send({ t: "act", a }); return; }
+  if (G.mode === "guest") { guestAct(a); return; }
   doAction(G.me, a);
 }
+// A guest's move goes to the host and back before it is real. Show it right away instead of waiting,
+// allow one move in flight, and resend it if the host has not acknowledged it yet.
+function guestAct(a) {
+  if (!G.net || G.pend) return;
+  const id = (G.actId = (G.actId || 0) + 1);
+  const send = () => G && G.net && G.net.send({ t: "act", a, id });
+  G.pend = { id, timer: setInterval(send, 1500) };
+  send();
+  predict(a);
+}
+function predict(a) {
+  const v = G.view;
+  if (!v || a.type !== "play" || v.phase !== "play" || v.turn !== G.me) return;
+  const hand = v.players[G.me].hand || [], idx = hand.findIndex(tl => key(tl) === a.tile);
+  if (idx < 0) return;
+  const nv = Object.assign({}, v, { chain: v.chain.map(x => x.slice()), players: v.players.map(p => Object.assign({}, p)) });
+  const mine = nv.players[G.me];
+  mine.hand = hand.filter((_, i) => i !== idx); mine.count = mine.hand.length;
+  place(nv.chain, hand[idx], a.side);
+  if (mine.hand.length) nv.turn = 1 - G.me; // on the last tile the host announces the result
+  G.view = nv; render();
+}
+function clearPend() { if (G && G.pend) { clearInterval(G.pend.timer); G.pend = null; } }
 function doAction(pi, a) {
   if (!G || !G.state) return false;
   const ok = applyAction(G.state, pi, a);
@@ -675,7 +701,7 @@ function render() {
   const myHand = v.players[me].hand || [];
   const mv = myTurn ? movesFor(myHand, v.chain) : [];
 
-  $("#roundLabel").textContent = t("round", { r: v.round });
+  renderRound(v);
   setAvatar($("#oppAvatar"), nm[op], G.opp && G.opp.small, G.opp && G.opp.ai);
   setAvatar($("#meAvatar"), nm[me], profile.small);
   $("#oppName").textContent = nm[op]; $("#meName").textContent = nm[me];
@@ -713,6 +739,13 @@ function render() {
   else if (v.phase !== "play" && $("#overlay").hidden) showResult(v);
   lastChainLen = v.chain.length; lastMyCount = v.players[me].count; lastPhase = v.phase;
 }
+function renderRound(v) {
+  v = v || (G && currentView()); if (!v) return;
+  let s = t("round", { r: v.round });
+  if (G.rtt != null) s += " · " + G.rtt + "ms";
+  if (G.relay) s += " · " + t("relay");
+  $("#roundLabel").textContent = s;
+}
 function pack(chain, u, W, gap) {
   const rows = [[]]; let w = 0;
   chain.forEach((tl, i) => {
@@ -728,7 +761,7 @@ function renderBoard(v, mv) {
   if (!chain.length) { board.appendChild(el("div", "empty-hint", v.phase === "play" && v.turn === G.me ? t("playFirst") : "")); $("#endpick").hidden = true; return; }
   const box = board.getBoundingClientRect(), gap = 3;
   const W = Math.max(60, box.width), H = Math.max(60, box.height);
-  let u = 40, rows;
+  let u = Math.max(20, Math.min(64, Math.floor(W / 8))), rows;
   for (; u >= 9; u--) { rows = pack(chain, u, W, gap); if (rows.length * (2 * u + gap) <= H) break; }
   rows = pack(chain, u, W, gap);
   const selMoves = sel ? mv.filter(m => m.tile === sel) : [];
@@ -762,7 +795,7 @@ function renderBoard(v, mv) {
 function renderHand(hand, myTurn, mv) {
   const h = $("#hand"); h.textContent = "";
   const n = Math.max(hand.length, 1), W = h.clientWidth || 360;
-  const w = Math.max(34, Math.min(50, Math.floor((W - 8 - (n - 1) * 6) / n)));
+  const w = Math.max(34, Math.min(W > 600 ? 80 : 50, Math.floor((W - 8 - (n - 1) * 6) / n)));
   h.classList.toggle("many", n * (w + 6) > W);
   const playable = new Set(mv.map(m => m.tile));
   hand.forEach(tl => {
@@ -820,7 +853,7 @@ function showResult(v) {
   });
 }
 function leaveGame() {
-  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); if (G.net) G.net.close(); }
+  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearPend(); if (G.net) G.net.close(); }
   G = null; closeSheet(); renderHome(); show("home");
 }
 $("#leaveBtn").addEventListener("click", () => {
@@ -865,7 +898,7 @@ async function openHost(code) {
   await loadPeerJS();
   return new Promise((res, rej) => {
     const peer = new window.Peer(PEER_PREFIX + code);
-    const net = { conn: null, send(d) { if (net.conn && net.conn.open) net.conn.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
+    const net = { conn: null, send(d) { if (net.conn && net.conn.open) net.conn.send(d); }, close() { try { peer.destroy(); } catch (e) {} }, pc: () => net.conn && net.conn.peerConnection };
     let ready = false;
     keepAlive(peer);
     peer.on("open", () => { ready = true; res(net); });
@@ -899,7 +932,7 @@ async function openGuest(code) {
     keepAlive(peer);
     peer.on("open", () => {
       const c = peer.connect(PEER_PREFIX + code, { reliable: true });
-      const net = { send(d) { if (c.open) c.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
+      const net = { send(d) { if (c.open) c.send(d); }, close() { try { peer.destroy(); } catch (e) {} }, pc: () => c.peerConnection };
       c.on("open", () => { clearTimeout(timer); res(net); });
       c.on("data", d => net.onmsg && net.onmsg(d));
       c.on("close", () => net.onclose && net.onclose());
@@ -941,7 +974,7 @@ async function createTable() {
       pending = null;
       G = { mode: "host", me: 0, opp: cleanProfile(d.p), state: newGame(), net };
       wireHost(net); resetMarks(); show("game"); sendWelcome(); afterChange();
-      G.tick = setInterval(sendState, 4000);
+      G.tick = setInterval(sendState, 4000); startPing();
     };
     net.onclose = () => { net.conn = null; net.peerId = null; };
   } catch (e) {
@@ -952,13 +985,41 @@ function wireHost(net) {
   net.onmsg = d => {
     if (!G || !d || typeof d !== "object") return;
     if (d.t === "hello") { G.opp = cleanProfile(d.p); sendWelcome(); render(); }
-    else if (d.t === "act") { if (!doAction(1, d.a)) sendState(); }
+    else if (d.t === "act") {
+      if (Number.isInteger(d.id)) { if (d.id <= (G.ack || 0)) { sendState(); return; } G.ack = d.id; }
+      if (!doAction(1, d.a)) sendState();
+    }
+    else if (netPing(d)) return;
     else if (d.t === "sync") sendState();
   };
   net.onclose = opponentGone;
 }
 function sendWelcome() { if (G && G.net) { G.net.send({ t: "welcome", p: myCard() }); sendState(); } }
-function sendState() { if (G && G.mode === "host" && G.net) G.net.send({ t: "state", s: viewFor(G.state, 1) }); }
+function sendState() { if (G && G.mode === "host" && G.net) G.net.send({ t: "state", s: viewFor(G.state, 1), ack: G.ack || 0 }); }
+// Round-trip time and whether the link goes through a relay server, shown next to the round number.
+function netPing(d) {
+  if (d.t === "ping") { G.net.send({ t: "pong", n: d.n }); return true; }
+  if (d.t === "pong") { if (typeof d.n === "number") { G.rtt = Math.max(0, Date.now() - d.n); renderRound(); } return true; }
+  return false;
+}
+function startPing() {
+  G.pingT = setInterval(() => {
+    if (!G || !G.net) return;
+    G.net.send({ t: "ping", n: Date.now() });
+    const pc = G.net.pc && G.net.pc();
+    if (pc) isRelay(pc).then(r => { if (G && r != null) { G.relay = r; renderRound(); } });
+  }, 3000);
+}
+async function isRelay(pc) {
+  try {
+    const st = await pc.getStats(); let pair = null;
+    st.forEach(r => { if (r.type === "transport" && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId); });
+    if (!pair) st.forEach(r => { if (!pair && r.type === "candidate-pair" && r.nominated && r.state === "succeeded") pair = r; });
+    if (!pair) return null;
+    const lc = st.get(pair.localCandidateId), rc = st.get(pair.remoteCandidateId);
+    return !!((lc && lc.candidateType === "relay") || (rc && rc.candidateType === "relay"));
+  } catch (e) { return null; }
+}
 function opponentGone() { if (!G) return; const wasGame = !$("#game").hidden; leaveGame(); if (wasGame) toast(t("oppLeft")); }
 function cancelHost() {
   if (pending) { pending.close(); pending = null; }
@@ -977,7 +1038,7 @@ async function joinTable(code) {
     let greeted = false, gaveUp = null;
     const hello = () => net.send({ t: "hello", p: myCard() });
     hello();
-    G.tick = setInterval(() => { if (!greeted) hello(); }, 2000);
+    G.tick = setInterval(() => { if (!greeted) hello(); }, 2000); startPing();
     gaveUp = setTimeout(() => { if (!greeted && G && G.net === net) { leaveGame(); show("online"); msg.textContent = t("connFail"); } }, 15000);
     net.onmsg = d => {
       if (!G || !d || typeof d !== "object") return;
@@ -985,8 +1046,13 @@ async function joinTable(code) {
         G.opp = cleanProfile(d.p);
         if (!greeted) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; }
         render();
+      } else if (netPing(d)) {
+        return;
       } else if (d.t === "state") {
         const v = validView(d.s); if (!v) return;
+        // the host hasn't seen our latest move yet: keep showing it instead of jumping back
+        if (G.pend && Number.isInteger(d.ack) && d.ack < G.pend.id) return;
+        clearPend();
         if (G.view && v.seq < G.view.seq) return;
         const first = !G.view; G.view = v;
         if (first) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; resetMarks(); show("game"); }
