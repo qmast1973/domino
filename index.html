@@ -220,6 +220,7 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
       <p class="note" data-i18n="shareCode" style="text-align:center"></p>
       <div class="code" id="codeOut">-----</div>
       <p class="note waiting-dots" style="text-align:center" data-i18n="waiting"></p>
+      <p class="note" style="text-align:center" data-i18n="keepOpen"></p>
       <div class="row">
         <button class="btn" id="copyLinkBtn" data-i18n="copyLink">링크 복사</button>
         <button class="btn ghost" id="cancelHost" data-i18n="cancel">취소</button>
@@ -293,7 +294,7 @@ const T = {
     defaultName:"나", computer:"컴퓨터",
     createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
     waiting:"상대를 기다리는 중", copyLink:"링크 복사", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
-    connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", badCode:"방 코드 5자리를 입력하세요.",
+    connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", notFound:"그 코드의 방을 찾지 못했어요. 방을 만든 폰에서 게임 화면이 켜져 있는지 확인하세요.", selfJoin:"내가 만든 방이에요. 상대의 폰에서 이 코드로 참가해야 해요.", keepOpen:"코드를 보낸 뒤 이 화면으로 돌아와 켜 두세요.", badCode:"방 코드 5자리를 입력하세요.",
     onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.",
     round:"{r}판", yourTurn:"내 차례예요", oppTurn:"{n}의 차례", playFirst:"아무 패나 놓아 시작하세요",
     mustDraw:"낼 패가 없어요. 더미를 눌러 한 장 뽑으세요", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
@@ -318,7 +319,7 @@ const T = {
     defaultName:"Me", computer:"Computer",
     createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
     waiting:"Waiting for an opponent", copyLink:"Copy link", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
-    connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", badCode:"Enter the 5-letter table code.",
+    connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", notFound:"No table with that code. Make sure the host still has the game open.", selfJoin:"That's your own table. Your opponent joins with this code on their phone.", keepOpen:"After sending the code, come back and keep this screen open.", badCode:"Enter the 5-letter table code.",
     onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.",
     round:"Round {r}", yourTurn:"Your turn", oppTurn:"{n}'s turn", playFirst:"Play any tile to start",
     mustDraw:"No move. Tap the pile to draw a tile", mustPass:"No move and nothing left to draw", pass:"Pass",
@@ -343,7 +344,7 @@ const T = {
     defaultName:"ฉัน", computer:"คอมพิวเตอร์",
     createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
     waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
-    connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", badCode:"กรอกรหัสห้อง 5 ตัว",
+    connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", notFound:"ไม่พบห้องรหัสนี้ ตรวจสอบว่าผู้สร้างห้องยังเปิดหน้าเกมอยู่", selfJoin:"นี่คือห้องของคุณเอง ให้คู่แข่งใช้รหัสนี้บนโทรศัพท์ของเขา", keepOpen:"ส่งรหัสแล้วกลับมาเปิดหน้านี้ค้างไว้", badCode:"กรอกรหัสห้อง 5 ตัว",
     onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว",
     round:"รอบที่ {r}", yourTurn:"ตาของคุณ", oppTurn:"ตาของ {n}", playFirst:"วางไพ่ใบใดก็ได้เพื่อเริ่ม",
     mustDraw:"ไม่มีไพ่ลง แตะกองเพื่อจั่ว", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
@@ -866,6 +867,7 @@ async function openHost(code) {
     const peer = new window.Peer(PEER_PREFIX + code);
     const net = { conn: null, send(d) { if (net.conn && net.conn.open) net.conn.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
     let ready = false;
+    keepAlive(peer);
     peer.on("open", () => { ready = true; res(net); });
     peer.on("error", e => { if (!ready) rej(e); });
     peer.on("connection", c => {
@@ -894,6 +896,7 @@ async function openGuest(code) {
     const peer = new window.Peer();
     const timer = setTimeout(() => { try { peer.destroy(); } catch (e) {} rej(new Error("timeout")); }, 15000);
     peer.on("error", e => { clearTimeout(timer); try { peer.destroy(); } catch (x) {} rej(e); });
+    keepAlive(peer);
     peer.on("open", () => {
       const c = peer.connect(PEER_PREFIX + code, { reliable: true });
       const net = { send(d) { if (c.open) c.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
@@ -902,6 +905,19 @@ async function openGuest(code) {
       c.on("close", () => net.onclose && net.onclose());
     });
   });
+}
+// iOS drops the broker connection when the browser goes to the background (e.g. switching to a chat app
+// to send the code). Reconnect so the table can still be found.
+function keepAlive(peer) {
+  const again = () => { if (!peer.destroyed && peer.disconnected) { try { peer.reconnect(); } catch (e) {} } };
+  peer.on("disconnected", () => setTimeout(again, 800));
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") again(); });
+}
+function netError(e) {
+  if (e && e.message === "unavailable") return t("onlineUnavailable");
+  if (e && e.type === "peer-unavailable") return t("notFound");
+  const why = e && (e.type || e.message);
+  return t("connFail") + (why ? " (" + String(why).slice(0, 40) + ")" : "");
 }
 const myCard = () => ({ name: myName(), small: profile.small });
 
@@ -929,7 +945,7 @@ async function createTable() {
     };
     net.onclose = () => { net.conn = null; net.peerId = null; };
   } catch (e) {
-    msg.textContent = (e && e.message === "unavailable") ? t("onlineUnavailable") : t("connFail");
+    msg.textContent = netError(e);
   } finally { $("#createBtn").disabled = false; }
 }
 function wireHost(net) {
@@ -952,6 +968,7 @@ async function joinTable(code) {
   code = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   const msg = $("#onlineMsg");
   if (code.length !== 5) { msg.textContent = t("badCode"); return; }
+  if (pending && pending.code === code) { msg.textContent = t("selfJoin"); return; }
   cancelHost();
   msg.textContent = t("connecting"); $("#joinBtn").disabled = true;
   try {
@@ -978,7 +995,7 @@ async function joinTable(code) {
     };
     net.onclose = opponentGone;
   } catch (e) {
-    msg.textContent = (e && e.message === "unavailable") ? t("onlineUnavailable") : t("connFail");
+    msg.textContent = netError(e);
   } finally { $("#joinBtn").disabled = false; }
 }
 
