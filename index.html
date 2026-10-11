@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b1b14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Domino">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>도미노 테이블</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Mitr:wght@500&family=Sarabun:wght@400;600&display=swap">
+<style>
+/* Layout: one phone-sized card table. Walnut rail around a felt board, opponent on top, you at the bottom, hand fanned under the board. */
+:root{
+  --wood:#2b1b14; --wood-2:#47301f; --felt:#165a55; --felt-hi:#22807a;
+  --ivory:#f6efe0; --ivory-edge:#d8c9a8; --ink:#201812;
+  --brass:#e0ae4f; --coral:#f08a62; --text:#f6ecd9; --muted:#c3b29a; --scrim:rgba(18,11,7,.72);
+  --f-display:"Jua","Mitr",system-ui,sans-serif;
+  --f-body:"Gowun Dodum","Sarabun",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--wood);color:var(--text);font-family:var(--f-body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--brass);outline-offset:2px}
+.screen{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-inline:16px;padding-block:12px;box-sizing:border-box;gap:12px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+
+/* ---- buttons ---- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:14px;font-family:var(--f-display);font-size:18px;background:var(--wood-2);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+.btn.primary{background:var(--brass);color:var(--ink)}
+.btn.coral{background:var(--coral);color:var(--ink)}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 1.5px var(--wood-2)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:default}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--wood-2);font-size:18px;flex:none}
+.icon-btn svg{width:20px;height:20px}
+
+/* ---- home ---- */
+#home{justify-content:center;gap:22px}
+.hero{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.hero h1{font-size:46px;color:var(--ivory);letter-spacing:.02em}
+.hero p{margin:0;color:var(--muted)}
+.hero-tiles{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.hero-tiles .tile{transform:rotate(var(--r,0deg))}
+.card{background:var(--felt);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.35)}
+.profile-row{display:flex;align-items:center;gap:12px}
+.profile-row .who{flex:1;min-width:0}
+.profile-row .who b{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-row .who span{color:var(--muted);font-size:13px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.25);border-radius:12px;padding:3px}
+.seg button{min-height:36px;border-radius:9px;font-family:var(--f-display);font-size:15px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ivory);color:var(--ink)}
+.home-foot{display:flex;justify-content:center}
+.link{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:14px;padding:8px}
+
+/* ---- avatar ---- */
+.avatar{width:48px;height:48px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;background:var(--coral);color:var(--ink);font-family:var(--f-display);font-size:20px;box-shadow:0 0 0 2.5px var(--ivory)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar.ai{background:var(--brass)}
+.avatar.big{width:112px;height:112px;font-size:44px;box-shadow:0 0 0 4px var(--ivory)}
+
+/* ---- subpages ---- */
+.topbar{display:flex;align-items:center;gap:10px}
+.topbar h2{font-size:22px;flex:1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;color:var(--muted);letter-spacing:.04em}
+input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--ivory);border:0;border-radius:12px;min-height:46px;padding:0 14px;box-sizing:border-box;width:100%}
+.photo-edit{display:flex;flex-direction:column;align-items:center;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.filelabel{position:relative}
+.filelabel input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{color:var(--muted);font-size:13px;line-height:1.5;margin:0}
+.msg{min-height:20px;color:var(--coral);font-size:14px;margin:0}
+.code{font-family:var(--f-display);font-size:44px;letter-spacing:.18em;text-align:center;color:var(--ivory);font-variant-numeric:tabular-nums}
+.tables{display:flex;flex-direction:column;gap:8px}
+.table-item{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:12px;padding:8px 8px 8px 14px}
+.table-item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.table-item .btn{min-height:38px;font-size:15px}
+.waiting-dots::after{content:"";animation:dots 1.4s steps(4,end) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+/* ---- game ---- */
+#game{gap:8px;padding-block:8px}
+.pbar{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:16px;background:rgba(0,0,0,.18);transition:box-shadow .25s}
+.pbar.active{box-shadow:0 0 0 2px var(--brass),0 0 18px rgba(224,174,79,.35)}
+.pbar .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pbar .name{font-family:var(--f-display);font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score{display:inline-flex;align-items:baseline;gap:2px;font-variant-numeric:tabular-nums;font-size:14px;color:var(--muted)}
+.score b{color:var(--ivory);font-size:17px;font-weight:600}
+.count{min-width:30px;height:38px;border-radius:7px;background:var(--coral);color:var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-size:19px;font-variant-numeric:tabular-nums;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.backs{display:flex;gap:2px;flex-wrap:wrap;max-width:110px}
+.backs i{width:7px;height:13px;border-radius:2px;background:var(--brass);opacity:.8}
+.gtop{display:flex;align-items:center;gap:8px}
+.gtop .round{flex:1;text-align:center;font-family:var(--f-display);color:var(--muted);font-size:15px}
+
+.felt{position:relative;flex:1;min-height:0;border-radius:22px;background:radial-gradient(120% 90% at 50% 40%,var(--felt-hi),var(--felt) 70%);box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset 0 0 40px rgba(0,0,0,.35);overflow:hidden}
+.felt::before{content:"";position:absolute;inset:10px;border:1.5px dashed rgba(255,255,255,.18);border-radius:16px;pointer-events:none}
+#board{position:absolute;inset:82px 16px 16px 16px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.brow{display:flex;align-items:center;gap:3px}
+.brow.rev{flex-direction:row-reverse}
+.brow.center{justify-content:center}
+.empty-hint{color:rgba(255,255,255,.55);text-align:center;font-family:var(--f-display);font-size:18px}
+#pile{position:absolute;right:12px;top:12px;width:58px;height:62px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#pile .stack{width:40px;height:30px;border-radius:6px;background:repeating-linear-gradient(180deg,var(--brass) 0 5px,#b9852f 5px 7px);box-shadow:0 3px 0 #7b5418}
+#pile b{font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--ivory);font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+#pile.call{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.1)}}
+#endpick{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+#endpick p{margin:0;text-align:center;font-family:var(--f-display);font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+#endpick .row .btn{min-height:44px;font-size:16px}
+
+.tile{display:block;flex:none;filter:drop-shadow(0 2px 0 var(--ivory-edge)) drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.tile .face{fill:var(--ivory)}
+.tile .pip{fill:var(--ink)}
+.tile .div{stroke:var(--ink);stroke-width:2;stroke-linecap:round;opacity:.75}
+.tile .pin{fill:var(--coral)}
+.tile .back{fill:var(--brass)}
+.tile .backline{stroke:#b9852f;stroke-width:3}
+.tile.new{animation:drop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes drop{from{transform:scale(1.35);opacity:.2}}
+.tile.glow{filter:drop-shadow(0 0 0 transparent) drop-shadow(0 0 6px var(--brass)) drop-shadow(0 0 2px var(--brass));cursor:pointer}
+
+#status{min-height:22px;text-align:center;font-family:var(--f-display);font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+#status .btn{min-height:34px;font-size:15px;padding:0 14px}
+#hand{display:flex;gap:6px;justify-content:center;align-items:flex-end;overflow-x:auto;padding:10px 4px 4px;min-height:96px;scrollbar-width:none}
+#hand::-webkit-scrollbar{display:none}
+#hand.many{justify-content:flex-start}
+#hand button{padding:0;border-radius:8px;transition:transform .15s,opacity .15s}
+#hand button.ok{transform:translateY(-8px)}
+#hand button.dim{opacity:.45}
+#hand button.sel{transform:translateY(-16px)}
+#hand button.sel .tile{filter:drop-shadow(0 2px 0 var(--ivory-edge)) drop-shadow(0 0 8px var(--brass))}
+#hand button.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* ---- overlays ---- */
+.overlay{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:10}
+.sheet{width:100%;max-width:420px;background:var(--wood-2);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);max-height:90vh;overflow:auto;box-sizing:border-box}
+.sheet h2{font-size:26px;text-align:center;color:var(--ivory)}
+.sheet .sub{text-align:center;color:var(--muted);margin:0}
+.tally{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center}
+.tally .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-display);font-size:17px}
+.tally .s{font-variant-numeric:tabular-nums;font-size:18px}
+.reveal{display:flex;gap:4px;flex-wrap:wrap;grid-column:1/-1;padding-left:4px}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ivory);color:var(--ink);padding:10px 16px;border-radius:12px;font-family:var(--f-display);z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>html{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="screen">
+  <div class="hero">
+    <div class="hero-tiles" id="heroTiles"></div>
+    <h1 data-i18n="appName">도미노</h1>
+    <p data-i18n="tagline">100점 먼저 내는 사람이 승리</p>
+  </div>
+  <div class="card">
+    <div class="profile-row">
+      <div class="avatar" id="homeAvatar"></div>
+      <div class="who"><b id="homeName"></b><span data-i18n="profileHint"></span></div>
+      <button class="btn ghost" id="editProfileBtn" data-i18n="editProfile">프로필 편집</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="seg" role="group" id="diffSeg">
+      <button type="button" data-diff="easy" data-i18n="easy">쉬움</button>
+      <button type="button" data-diff="normal" data-i18n="normal">보통</button>
+    </div>
+    <button class="btn primary" id="playAiBtn" data-i18n="playAI">컴퓨터와 대결</button>
+    <button class="btn coral" id="playOnlineBtn" data-i18n="playOnline">온라인 대결</button>
+  </div>
+  <div class="home-foot"><button class="link" id="rulesBtn" data-i18n="rules">규칙 보기</button></div>
+</section>
+
+<!-- PROFILE -->
+<section id="profile" class="screen" hidden>
+  <div class="topbar">
+    <button class="icon-btn" id="profileBack" aria-label="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 data-i18n="editProfile">프로필 편집</h2>
+  </div>
+  <div class="card">
+    <div class="photo-edit">
+      <div class="avatar big" id="editAvatar"></div>
+      <div class="row" style="width:100%">
+        <label class="btn filelabel"><span data-i18n="photo">사진 선택</span><input type="file" id="photoInput" accept="image/*"></label>
+        <button class="btn ghost" id="removePhoto" data-i18n="removePhoto">사진 지우기</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="nameInput" data-i18n="name">이름</label>
+      <input type="text" id="nameInput" maxlength="20" autocomplete="nickname">
+    </div>
+    <p class="msg" id="profileMsg"></p>
+    <button class="btn primary" id="saveProfile" data-i18n="save">저장</button>
+  </div>
+</section>
+
+<!-- ONLINE -->
+<section id="online" class="screen" hidden>
+  <div class="topbar">
+    <button class="icon-btn" id="onlineBack" aria-label="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 data-i18n="playOnline">온라인 대결</h2>
+  </div>
+  <div class="card" id="hostCard">
+    <div id="hostIdle">
+      <button class="btn primary" id="createBtn" style="width:100%" data-i18n="createRoom">방 만들기</button>
+    </div>
+    <div id="hostWait" hidden style="display:flex;flex-direction:column;gap:10px">
+      <p class="note" data-i18n="shareCode" style="text-align:center"></p>
+      <div class="code" id="codeOut">-----</div>
+      <p class="note waiting-dots" style="text-align:center" data-i18n="waiting"></p>
+      <div class="row">
+        <button class="btn" id="copyLinkBtn" data-i18n="copyLink">링크 복사</button>
+        <button class="btn ghost" id="cancelHost" data-i18n="cancel">취소</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="lobbyCard" hidden>
+    <h3 data-i18n="openTables">열린 방</h3>
+    <div class="tables" id="tables"></div>
+  </div>
+  <div class="card">
+    <div class="field">
+      <label for="codeInput" data-i18n="codePh">방 코드</label>
+      <div class="row">
+        <input type="text" id="codeInput" maxlength="5" autocapitalize="characters" autocomplete="off" style="flex:2;text-transform:uppercase;letter-spacing:.2em">
+        <button class="btn primary" id="joinBtn" data-i18n="joinRoom">참가</button>
+      </div>
+    </div>
+    <p class="msg" id="onlineMsg"></p>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen" hidden>
+  <div class="gtop">
+    <button class="icon-btn" id="leaveBtn" aria-label="leave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="round" id="roundLabel"></div>
+    <button class="icon-btn" id="soundBtn" aria-label="sound"></button>
+    <button class="icon-btn" id="gameRulesBtn" aria-label="rules">?</button>
+  </div>
+  <div class="pbar" id="oppBar">
+    <div class="avatar" id="oppAvatar"></div>
+    <div class="who"><span class="name" id="oppName"></span><span class="score" id="oppScore"></span></div>
+    <div class="backs" id="oppBacks"></div>
+    <div class="count" id="oppCount"></div>
+  </div>
+  <div class="felt" id="felt">
+    <div id="board"></div>
+    <button id="pile" aria-label="draw"><span class="stack"></span><b id="pileCount"></b></button>
+    <div id="endpick" hidden>
+      <p data-i18n="chooseEnd">어느 쪽에 놓을까요?</p>
+      <div class="row"><button class="btn primary" id="pickL"></button><button class="btn primary" id="pickR"></button></div>
+    </div>
+  </div>
+  <div id="status"></div>
+  <div id="hand"></div>
+  <div class="pbar" id="meBar">
+    <div class="avatar" id="meAvatar"></div>
+    <div class="who"><span class="name" id="meName"></span><span class="score" id="meScore"></span></div>
+    <div class="count" id="meCount"></div>
+  </div>
+</section>
+
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* ================= i18n ================= */
+const LANG = (() => {
+  const l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
+  return l.startsWith("ko") ? "ko" : l.startsWith("th") ? "th" : "en";
+})();
+document.documentElement.lang = LANG;
+const T = {
+  ko: {
+    appName:"도미노", tagline:"100점에 먼저 닿는 사람이 승리", profileHint:"상대에게 보이는 이름과 사진", editProfile:"프로필 편집",
+    easy:"쉬움", normal:"보통", playAI:"컴퓨터와 대결", playOnline:"온라인 대결", rules:"규칙 보기",
+    photo:"사진 선택", removePhoto:"사진 지우기", name:"이름", save:"저장", cancel:"취소", saved:"저장했어요",
+    photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.",
+    defaultName:"나", computer:"컴퓨터",
+    createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
+    waiting:"상대를 기다리는 중", copyLink:"링크 복사", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
+    connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", badCode:"방 코드 5자리를 입력하세요.",
+    onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.",
+    round:"{r}판", yourTurn:"내 차례예요", oppTurn:"{n}의 차례", playFirst:"아무 패나 놓아 시작하세요",
+    mustDraw:"낼 패가 없어요. 더미를 눌러 한 장 뽑으세요", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
+    chooseEnd:"어느 쪽 끝에 붙일까요?", startEnd:"앞쪽 끝 {v}", farEnd:"뒤쪽 끝 {v}",
+    youWinRound:"이번 판 승리!", oppWinRound:"{n}의 승리", tieRound:"무승부라 점수가 없어요",
+    gotPoints:"+{p}점", blocked:"둘 다 낼 패가 없어 막혔어요. 남은 점수가 적은 쪽이 이겨요.",
+    nextRound:"다음 판", youWinGame:"최종 승리! 축하해요", oppWinGame:"{n}의 최종 승리", playAgain:"다시 하기", menu:"메뉴로",
+    leaveQ:"이 게임을 그만둘까요?", leave:"그만두기", stay:"계속하기", pipsLeft:"남은 점 {p}",
+    rulesTitle:"게임 규칙", close:"닫기",
+    r1:"0-0부터 6-6까지 28장 중 7장씩 받아요.",
+    r2:"바닥 줄의 양 끝 숫자와 같은 숫자가 있는 패를 이어 붙여요.",
+    r3:"낼 패가 없으면 더미에서 한 장씩 뽑아요. 더미가 비었으면 패스해요.",
+    r4:"먼저 패를 다 내면 상대 손에 남은 점의 합을 점수로 가져가요.",
+    r5:"둘 다 못 내서 막히면, 남은 점이 적은 쪽이 상대의 남은 점을 가져가요.",
+    r6:"100점에 먼저 닿는 사람이 최종 승리해요."
+  },
+  en: {
+    appName:"Dominoes", tagline:"First to 100 points wins", profileHint:"Name and photo your opponent sees", editProfile:"Edit profile",
+    easy:"Easy", normal:"Normal", playAI:"Play the computer", playOnline:"Play online", rules:"How to play",
+    photo:"Choose photo", removePhoto:"Remove photo", name:"Name", save:"Save", cancel:"Cancel", saved:"Saved",
+    photoFail:"That photo couldn't be read. Pick another one.",
+    defaultName:"Me", computer:"Computer",
+    createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
+    waiting:"Waiting for an opponent", copyLink:"Copy link", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
+    connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", badCode:"Enter the 5-letter table code.",
+    onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.",
+    round:"Round {r}", yourTurn:"Your turn", oppTurn:"{n}'s turn", playFirst:"Play any tile to start",
+    mustDraw:"No move. Tap the pile to draw a tile", mustPass:"No move and nothing left to draw", pass:"Pass",
+    chooseEnd:"Which end?", startEnd:"Start end {v}", farEnd:"Far end {v}",
+    youWinRound:"You won the round!", oppWinRound:"{n} won the round", tieRound:"Tie, no points",
+    gotPoints:"+{p} points", blocked:"Blocked: nobody can move. The lower hand wins.",
+    nextRound:"Next round", youWinGame:"You won the game!", oppWinGame:"{n} won the game", playAgain:"Play again", menu:"Menu",
+    leaveQ:"Leave this game?", leave:"Leave", stay:"Keep playing", pipsLeft:"{p} pips left",
+    rulesTitle:"How to play", close:"Close",
+    r1:"Each player gets 7 of the 28 tiles (0-0 to 6-6).",
+    r2:"Play a tile whose number matches one of the two open ends.",
+    r3:"No match? Draw from the pile one tile at a time. If the pile is empty, pass.",
+    r4:"Empty your hand first to score the pips left in your opponent's hand.",
+    r5:"If nobody can move, the lower hand wins and scores the other hand's pips.",
+    r6:"First to 100 points wins the game."
+  },
+  th: {
+    appName:"โดมิโน่", tagline:"ใครถึง 100 แต้มก่อนชนะ", profileHint:"ชื่อและรูปที่คู่แข่งเห็น", editProfile:"แก้ไขโปรไฟล์",
+    easy:"ง่าย", normal:"ปกติ", playAI:"เล่นกับคอมพิวเตอร์", playOnline:"เล่นออนไลน์", rules:"วิธีเล่น",
+    photo:"เลือกรูป", removePhoto:"ลบรูป", name:"ชื่อ", save:"บันทึก", cancel:"ยกเลิก", saved:"บันทึกแล้ว",
+    photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น",
+    defaultName:"ฉัน", computer:"คอมพิวเตอร์",
+    createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
+    waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
+    connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", badCode:"กรอกรหัสห้อง 5 ตัว",
+    onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว",
+    round:"รอบที่ {r}", yourTurn:"ตาของคุณ", oppTurn:"ตาของ {n}", playFirst:"วางไพ่ใบใดก็ได้เพื่อเริ่ม",
+    mustDraw:"ไม่มีไพ่ลง แตะกองเพื่อจั่ว", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
+    chooseEnd:"จะต่อด้านไหน?", startEnd:"ด้านต้น {v}", farEnd:"ด้านปลาย {v}",
+    youWinRound:"คุณชนะรอบนี้!", oppWinRound:"{n} ชนะรอบนี้", tieRound:"เสมอ ไม่มีแต้ม",
+    gotPoints:"+{p} แต้ม", blocked:"เกมตัน ไม่มีใครลงได้ คนที่แต้มในมือน้อยกว่าชนะ",
+    nextRound:"รอบถัดไป", youWinGame:"คุณชนะเกมนี้!", oppWinGame:"{n} ชนะเกมนี้", playAgain:"เล่นอีกครั้ง", menu:"เมนู",
+    leaveQ:"ออกจากเกมนี้?", leave:"ออก", stay:"เล่นต่อ", pipsLeft:"เหลือ {p} แต้ม",
+    rulesTitle:"วิธีเล่น", close:"ปิด",
+    r1:"แต่ละคนได้ไพ่ 7 ใบจากทั้งหมด 28 ใบ (0-0 ถึง 6-6)",
+    r2:"วางไพ่ที่มีตัวเลขตรงกับปลายด้านใดด้านหนึ่ง",
+    r3:"ถ้าไม่มีไพ่ลง ให้จั่วทีละใบ ถ้ากองหมดให้ผ่าน",
+    r4:"ใครลงไพ่หมดก่อน ได้แต้มเท่ากับแต้มที่เหลือในมือคู่แข่ง",
+    r5:"ถ้าเกมตัน คนที่แต้มในมือน้อยกว่าชนะและได้แต้มของอีกฝ่าย",
+    r6:"ใครถึง 100 แต้มก่อนชนะเกม"
+  }
+};
+function t(k, vars) {
+  let s = (T[LANG] && T[LANG][k]) || T.en[k] || k;
+  if (vars) for (const v in vars) s = s.split("{" + v + "}").join(String(vars[v]));
+  return s;
+}
+document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+document.title = t("appName");
+
+/* ================= storage & profile ================= */
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const IMG_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+let profile = Object.assign({ name: "", avatar: null, small: null }, store.get("domino.profile") || {});
+let diff = store.get("domino.diff") === "easy" ? "easy" : "normal";
+let muted = store.get("domino.muted") === true;
+const myName = () => (profile.name || "").trim() || t("defaultName");
+function cleanProfile(p) {
+  p = p && typeof p === "object" ? p : {};
+  const name = String(p.name || "").replace(/[\u0000-\u001f]/g, "").slice(0, 20).trim() || "?";
+  const small = typeof p.small === "string" && p.small.length < 3800 && IMG_RE.test(p.small) ? p.small : null;
+  return { name, small };
+}
+function setAvatar(el, name, src, isAI) {
+  el.textContent = "";
+  el.classList.toggle("ai", !!isAI);
+  if (src && IMG_RE.test(src)) {
+    const img = new Image(); img.alt = ""; img.src = src; el.appendChild(img);
+  } else {
+    el.textContent = isAI ? "AI" : (Array.from(name || "?")[0] || "?").toUpperCase();
+  }
+}
+
+/* ================= tiles ================= */
+const PIPS = {
+  0: [], 1: [[.5,.5]], 2: [[.27,.27],[.73,.73]], 3: [[.27,.27],[.5,.5],[.73,.73]],
+  4: [[.27,.27],[.73,.27],[.27,.73],[.73,.73]], 5: [[.27,.27],[.73,.27],[.5,.5],[.27,.73],[.73,.73]],
+  6: [[.28,.24],[.28,.5],[.28,.76],[.72,.24],[.72,.5],[.72,.76]]
+};
+function tileSVG(a, b, vertical, w, extraClass) {
+  const W = vertical ? 50 : 100, H = vertical ? 100 : 50;
+  const h = vertical ? w * 2 : w / 2;
+  let s = `<svg class="tile ${extraClass || ""}" viewBox="0 0 ${W} ${H}" width="${w}" height="${h}" aria-label="${a}-${b}" role="img"><rect class="face" x="1" y="1" width="${W - 2}" height="${H - 2}" rx="8"/>`;
+  [[a, 0], [b, 1]].forEach(([n, half]) => {
+    const ox = vertical ? 0 : half * 50, oy = vertical ? half * 50 : 0;
+    (PIPS[n] || []).forEach(([x, y]) => {
+      const px = vertical ? x : y, py = vertical ? y : x;
+      s += `<circle class="pip" cx="${ox + px * 50}" cy="${oy + py * 50}" r="5.4"/>`;
+    });
+  });
+  s += vertical ? `<line class="div" x1="9" y1="50" x2="41" y2="50"/><circle class="pin" cx="25" cy="50" r="2.6"/>`
+                : `<line class="div" x1="50" y1="9" x2="50" y2="41"/><circle class="pin" cx="50" cy="25" r="2.6"/>`;
+  return s + "</svg>";
+}
+function backSVG(w) {
+  return `<svg class="tile" viewBox="0 0 50 100" width="${w}" height="${w * 2}"><rect class="back" x="1" y="1" width="48" height="98" rx="8"/><line class="backline" x1="10" y1="50" x2="40" y2="50"/></svg>`;
+}
+
+/* ================= engine ================= */
+const key = tl => tl[0] + "-" + tl[1];
+const pips = hand => hand.reduce((s, tl) => s + tl[0] + tl[1], 0);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function newDeck() { const d = []; for (let a = 0; a <= 6; a++) for (let b = a; b <= 6; b++) d.push([a, b]); return shuffle(d); }
+function ends(chain) { return chain.length ? [chain[0][0], chain[chain.length - 1][1]] : null; }
+function movesFor(hand, chain) {
+  const e = ends(chain), out = [];
+  hand.forEach(tl => {
+    if (!e) { out.push({ tile: key(tl), side: "R" }); return; }
+    if (tl[0] === e[0] || tl[1] === e[0]) out.push({ tile: key(tl), side: "L" });
+    if (tl[0] === e[1] || tl[1] === e[1]) out.push({ tile: key(tl), side: "R" });
+  });
+  return out;
+}
+function newGame() {
+  const s = { seq: 0, round: 0, target: 100, nextStarter: null, players: [{ score: 0, hand: [] }, { score: 0, hand: [] }] };
+  startRound(s); return s;
+}
+function startRound(s) {
+  const deck = newDeck();
+  s.players.forEach(p => { p.hand = deck.splice(0, 7); });
+  s.bone = deck; s.chain = []; s.passes = 0; s.phase = "play"; s.result = null; s.round++;
+  if (s.nextStarter == null) {
+    // first round: highest double leads, otherwise the heaviest tile
+    let best = -1, who = 0;
+    s.players.forEach((p, i) => p.hand.forEach(tl => {
+      const v = tl[0] === tl[1] ? 100 + tl[0] : tl[0] + tl[1];
+      if (v > best) { best = v; who = i; }
+    }));
+    s.turn = who;
+  } else s.turn = s.nextStarter;
+}
+function endRound(s, reason) {
+  const a = pips(s.players[0].hand), b = pips(s.players[1].hand);
+  let winner, points;
+  if (reason === "domino") { winner = s.players[0].hand.length === 0 ? 0 : 1; points = winner === 0 ? b : a; }
+  else if (a === b) { winner = null; points = 0; }
+  else { winner = a < b ? 0 : 1; points = winner === 0 ? b : a; }
+  if (winner != null) s.players[winner].score += points;
+  s.result = { winner, points, reason, pips: [a, b] };
+  s.nextStarter = winner != null ? winner : 1 - s.turn;
+  s.phase = s.players.some(p => p.score >= s.target) ? "over" : "roundEnd";
+}
+function applyAction(s, pi, a) {
+  if (!a || typeof a !== "object") return false;
+  if (a.type === "next") { if (s.phase !== "roundEnd") return false; startRound(s); return true; }
+  if (a.type === "again") {
+    if (s.phase !== "over") return false;
+    s.players.forEach(p => { p.score = 0; }); s.round = 0; s.nextStarter = null; startRound(s); return true;
+  }
+  if (s.phase !== "play" || s.turn !== pi) return false;
+  const me = s.players[pi], mv = movesFor(me.hand, s.chain);
+  if (a.type === "play") {
+    const m = mv.find(x => x.tile === a.tile && x.side === a.side);
+    if (!m) return false;
+    const idx = me.hand.findIndex(tl => key(tl) === a.tile), tl = me.hand[idx];
+    if (!s.chain.length) s.chain.push([tl[0], tl[1]]);
+    else if (a.side === "L") { const L = s.chain[0][0]; s.chain.unshift(tl[1] === L ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
+    else { const R = s.chain[s.chain.length - 1][1]; s.chain.push(tl[0] === R ? [tl[0], tl[1]] : [tl[1], tl[0]]); }
+    me.hand.splice(idx, 1); s.passes = 0;
+    if (!me.hand.length) endRound(s, "domino"); else s.turn = 1 - pi;
+    return true;
+  }
+  if (a.type === "draw") { if (mv.length || !s.bone.length) return false; me.hand.push(s.bone.pop()); return true; }
+  if (a.type === "pass") {
+    if (mv.length || s.bone.length) return false;
+    s.passes++;
+    if (s.passes >= 2) endRound(s, "blocked"); else s.turn = 1 - pi;
+    return true;
+  }
+  return false;
+}
+function viewFor(s, me) {
+  return {
+    seq: s.seq, round: s.round, turn: s.turn, phase: s.phase, chain: s.chain, bone: s.bone.length, result: s.result,
+    players: s.players.map((p, i) => ({ score: p.score, count: p.hand.length, hand: (i === me || s.phase !== "play") ? p.hand : null }))
+  };
+}
+function validTile(x) { return Array.isArray(x) && x.length === 2 && x.every(n => Number.isInteger(n) && n >= 0 && n <= 6); }
+function validView(v) {
+  try {
+    if (!v || !Number.isInteger(v.seq) || !Array.isArray(v.chain) || !v.chain.every(validTile)) return null;
+    if (!Array.isArray(v.players) || v.players.length !== 2) return null;
+    if (!["play", "roundEnd", "over"].includes(v.phase)) return null;
+    for (const p of v.players) { if (!Number.isInteger(p.score) || !Number.isInteger(p.count)) return null; if (p.hand !== null && !(Array.isArray(p.hand) && p.hand.every(validTile))) return null; }
+    return v;
+  } catch (e) { return null; }
+}
+
+/* ================= AI ================= */
+function aiChoose(hand, chain, level) {
+  const mv = movesFor(hand, chain);
+  if (!mv.length) return null;
+  if (level === "easy") return mv[Math.floor(Math.random() * mv.length)];
+  let best = null, bestScore = -1e9;
+  const e = ends(chain);
+  for (const m of mv) {
+    const [a, b] = m.tile.split("-").map(Number);
+    const rest = hand.filter(tl => key(tl) !== m.tile);
+    let open = e ? (m.side === "L" ? (a === e[0] ? b : a) : (a === e[1] ? b : a)) : b;
+    const other = e ? (m.side === "L" ? e[1] : e[0]) : a;
+    const keep = rest.filter(tl => tl.includes(open) || tl.includes(other)).length;
+    const score = (a + b) + (a === b ? 6 : 0) + keep * 2.5 + Math.random();
+    if (score > bestScore) { bestScore = score; best = m; }
+  }
+  return best;
+}
+
+/* ================= sound ================= */
+let AC = null;
+function sfx(kind) {
+  if (muted) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const now = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = kind === "clack" ? "triangle" : kind === "win" ? "sine" : "square";
+    const f = kind === "clack" ? 520 : kind === "win" ? 660 : 300;
+    o.frequency.setValueAtTime(f, now);
+    if (kind === "win") o.frequency.setValueAtTime(880, now + .12);
+    g.gain.setValueAtTime(kind === "draw" ? .05 : .16, now);
+    g.gain.exponentialRampToValueAtTime(.001, now + (kind === "win" ? .45 : .09));
+    o.connect(g).connect(AC.destination); o.start(now); o.stop(now + .5);
+  } catch (e) {}
+}
+function renderSoundBtn() {
+  $("#soundBtn").innerHTML = muted
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8a5 5 0 0 1 0 8M19.5 5.5a8.5 8.5 0 0 1 0 13"/></svg>';
+}
+
+/* ================= UI helpers ================= */
+const $ = s => document.querySelector(s);
+const screens = ["home", "profile", "online", "game"];
+function show(id) { screens.forEach(s => { $("#" + s).hidden = s !== id; }); if (id === "game") requestAnimationFrame(render); }
+let toastTimer = null;
+function toast(msg) { const el = $("#toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600); }
+function openSheet(build) { const sh = $("#sheet"); sh.textContent = ""; build(sh); $("#overlay").hidden = false; }
+function closeSheet() { $("#overlay").hidden = true; $("#sheet").textContent = ""; }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function button(cls, text, fn) { const b = el("button", "btn " + cls, text); b.type = "button"; b.addEventListener("click", fn); return b; }
+
+/* ================= home & profile ================= */
+function renderHome() {
+  setAvatar($("#homeAvatar"), myName(), profile.small);
+  $("#homeName").textContent = myName();
+  document.querySelectorAll("#diffSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.diff === diff)));
+}
+$("#heroTiles").innerHTML = [[6,6,"-8deg",true],[5,3,"0deg",false],[1,4,"7deg",true]]
+  .map(([a,b,r,v]) => tileSVG(a, b, v, v ? 30 : 64).replace('class="tile ', `style="--r:${r}" class="tile `)).join("");
+document.querySelectorAll("#diffSeg button").forEach(b => b.addEventListener("click", () => { diff = b.dataset.diff; store.set("domino.diff", diff); renderHome(); }));
+
+let draft = null;
+$("#editProfileBtn").addEventListener("click", () => {
+  draft = { name: profile.name, avatar: profile.avatar, small: profile.small };
+  $("#nameInput").value = draft.name; $("#profileMsg").textContent = "";
+  setAvatar($("#editAvatar"), draft.name || myName(), draft.avatar);
+  show("profile");
+});
+$("#profileBack").addEventListener("click", () => show("home"));
+$("#removePhoto").addEventListener("click", () => { draft.avatar = draft.small = null; setAvatar($("#editAvatar"), $("#nameInput").value || myName(), null); });
+$("#nameInput").addEventListener("input", () => { if (!draft.avatar) setAvatar($("#editAvatar"), $("#nameInput").value || myName(), null); });
+function squareJpeg(img, size, quality) {
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const m = Math.min(img.naturalWidth, img.naturalHeight);
+  c.getContext("2d").drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, size, size);
+  return c.toDataURL("image/jpeg", quality);
+}
+$("#photoInput").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => {
+    try {
+      draft.avatar = squareJpeg(img, 192, .85);
+      let q = .75, small = squareJpeg(img, 56, q);
+      while (small.length > 3000 && q > .2) { q -= .1; small = squareJpeg(img, 48, q); }
+      draft.small = small;
+      setAvatar($("#editAvatar"), "", draft.avatar);
+      $("#profileMsg").textContent = "";
+    } catch (err) { $("#profileMsg").textContent = t("photoFail"); }
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = () => { $("#profileMsg").textContent = t("photoFail"); URL.revokeObjectURL(url); };
+  img.src = url;
+});
+$("#saveProfile").addEventListener("click", () => {
+  profile = { name: $("#nameInput").value.trim().slice(0, 20), avatar: draft.avatar, small: draft.small };
+  store.set("domino.profile", profile); renderHome(); show("home"); toast(t("saved"));
+});
+function showRules() {
+  openSheet(sh => {
+    sh.appendChild(el("h2", null, t("rulesTitle")));
+    const ol = el("ol", "rules"); ["r1","r2","r3","r4","r5","r6"].forEach(k => ol.appendChild(el("li", null, t(k)))); sh.appendChild(ol);
+    sh.appendChild(button("primary", t("close"), () => { closeSheet(); if (G) render(); }));
+  });
+}
+$("#rulesBtn").addEventListener("click", showRules);
+$("#gameRulesBtn").addEventListener("click", showRules);
+$("#soundBtn").addEventListener("click", () => { muted = !muted; store.set("domino.muted", muted); renderSoundBtn(); });
+
+/* ================= game controller ================= */
+// G.mode: "ai" | "host" | "guest". Host and AI games own the full state; a guest only holds the host's view.
+let G = null;
+let sel = null, lastChainLen = 0, lastMyCount = 0, lastPhase = null, lastFirst = null;
+
+function startAI() {
+  G = { mode: "ai", me: 0, opp: { name: t("computer"), small: null, ai: true }, state: newGame(), level: diff };
+  resetMarks(); show("game"); afterChange();
+}
+function resetMarks() { sel = null; lastChainLen = 0; lastMyCount = 0; lastPhase = null; lastFirst = null; closeSheet(); $("#endpick").hidden = true; }
+function currentView() { return G.mode === "guest" ? G.view : viewFor(G.state, G.me); }
+function act(a) {
+  if (!G) return;
+  if (G.mode === "guest") { G.net && G.net.send({ t: "act", a }); return; }
+  doAction(G.me, a);
+}
+function doAction(pi, a) {
+  if (!G || !G.state) return false;
+  const ok = applyAction(G.state, pi, a);
+  if (ok) { G.state.seq++; afterChange(); }
+  return ok;
+}
+function afterChange() {
+  render();
+  if (G.mode === "host") sendState();
+  if (G.mode === "ai") {
+    clearTimeout(G.aiTimer);
+    const s = G.state;
+    if (s.phase === "play" && s.turn === 1) {
+      const canMove = movesFor(s.players[1].hand, s.chain).length > 0;
+      G.aiTimer = setTimeout(aiStep, canMove ? 850 : 480);
+    }
+  }
+}
+function aiStep() {
+  if (!G || G.mode !== "ai") return;
+  const s = G.state; if (s.phase !== "play" || s.turn !== 1) return;
+  const m = aiChoose(s.players[1].hand, s.chain, G.level);
+  if (m) doAction(1, { type: "play", tile: m.tile, side: m.side });
+  else if (s.bone.length) doAction(1, { type: "draw" });
+  else doAction(1, { type: "pass" });
+}
+function names() { const n = []; n[G.me] = myName(); n[1 - G.me] = G.opp ? G.opp.name : "…"; return n; }
+
+/* ================= rendering ================= */
+function render() {
+  if (!G || $("#game").hidden) return;
+  const v = currentView(); if (!v) return;
+  const me = G.me, op = 1 - me, nm = names();
+  const myTurn = v.phase === "play" && v.turn === me;
+  const myHand = v.players[me].hand || [];
+  const mv = myTurn ? movesFor(myHand, v.chain) : [];
+
+  $("#roundLabel").textContent = t("round", { r: v.round });
+  setAvatar($("#oppAvatar"), nm[op], G.opp && G.opp.small, G.opp && G.opp.ai);
+  setAvatar($("#meAvatar"), nm[me], profile.small);
+  $("#oppName").textContent = nm[op]; $("#meName").textContent = nm[me];
+  const sc = (n) => { const f = document.createDocumentFragment(); f.appendChild(el("b", null, String(n))); f.appendChild(document.createTextNode("/100")); return f; };
+  $("#oppScore").replaceChildren(sc(v.players[op].score)); $("#meScore").replaceChildren(sc(v.players[me].score));
+  $("#oppCount").textContent = v.players[op].count; $("#meCount").textContent = v.players[me].count;
+  $("#oppBacks").innerHTML = "<i></i>".repeat(Math.min(v.players[op].count, 14));
+  $("#oppBar").classList.toggle("active", v.phase === "play" && v.turn === op);
+  $("#meBar").classList.toggle("active", myTurn);
+  $("#pileCount").textContent = v.bone;
+  $("#pile").classList.toggle("call", myTurn && !mv.length && v.bone > 0);
+  $("#pile").style.opacity = v.bone ? 1 : .35;
+
+  // sounds from observed changes
+  if (v.chain.length > lastChainLen) sfx("clack");
+  else if (v.phase === "play" && v.players[me].count > lastMyCount && lastChainLen === v.chain.length && lastPhase === "play") sfx("draw");
+
+  // status line
+  const st = $("#status"); st.textContent = "";
+  if (v.phase === "play") {
+    if (myTurn) {
+      if (!v.chain.length) st.textContent = t("playFirst");
+      else if (mv.length) st.textContent = t("yourTurn");
+      else if (v.bone > 0) st.textContent = t("mustDraw");
+      else { st.appendChild(el("span", null, t("mustPass"))); st.appendChild(button("primary", t("pass"), () => act({ type: "pass" }))); }
+    } else st.textContent = t("oppTurn", { n: nm[op] });
+  }
+  if (sel && (!myTurn || !myHand.some(tl => key(tl) === sel))) sel = null;
+
+  renderBoard(v, mv);
+  renderHand(myHand, myTurn, mv);
+
+  if (v.phase !== "play" && lastPhase === "play") { showResult(v); if (v.result && v.result.winner === me) sfx("win"); }
+  else if (v.phase === "play" && lastPhase && lastPhase !== "play") closeSheet();
+  else if (v.phase !== "play" && $("#overlay").hidden) showResult(v);
+  lastChainLen = v.chain.length; lastMyCount = v.players[me].count; lastPhase = v.phase;
+}
+function pack(chain, u, W, gap) {
+  const rows = [[]]; let w = 0;
+  chain.forEach((tl, i) => {
+    const tw = (tl[0] === tl[1] ? u : 2 * u) + gap;
+    if (w + tw > W && rows[rows.length - 1].length) { rows.push([]); w = 0; }
+    rows[rows.length - 1].push(i); w += tw;
+  });
+  return rows;
+}
+function renderBoard(v, mv) {
+  const board = $("#board"); board.textContent = "";
+  const chain = v.chain;
+  if (!chain.length) { board.appendChild(el("div", "empty-hint", v.phase === "play" && v.turn === G.me ? t("playFirst") : "")); $("#endpick").hidden = true; return; }
+  const box = board.getBoundingClientRect(), gap = 3;
+  const W = Math.max(60, box.width), H = Math.max(60, box.height);
+  let u = 40, rows;
+  for (; u >= 9; u--) { rows = pack(chain, u, W, gap); if (rows.length * (2 * u + gap) <= H) break; }
+  rows = pack(chain, u, W, gap);
+  const selMoves = sel ? mv.filter(m => m.tile === sel) : [];
+  const glowL = selMoves.some(m => m.side === "L"), glowR = selMoves.some(m => m.side === "R");
+  const newIdx = chain.length > lastChainLen && lastChainLen > 0 ? (chain[0].join() !== lastFirst ? 0 : chain.length - 1) : (lastChainLen === 0 ? 0 : -1);
+  rows.forEach((r, ri) => {
+    const row = el("div", "brow" + (ri % 2 ? " rev" : "") + (rows.length === 1 ? " center" : ""));
+    row.style.minHeight = (2 * u) + "px";
+    r.forEach(i => {
+      const [a, b] = chain[i], dbl = a === b;
+      let cls = i === newIdx ? "new" : "";
+      const isL = i === 0, isR = i === chain.length - 1;
+      if ((isL && glowL) || (isR && glowR)) cls += " glow";
+      const html = dbl ? tileSVG(a, b, true, u, cls) : (ri % 2 ? tileSVG(b, a, false, 2 * u, cls) : tileSVG(a, b, false, 2 * u, cls));
+      const wrap = document.createElement("span"); wrap.innerHTML = html;
+      const svg = wrap.firstChild;
+      if ((isL && glowL) || (isR && glowR)) svg.addEventListener("click", () => playSel(isL && glowL ? "L" : "R"));
+      row.appendChild(svg);
+    });
+    board.appendChild(row);
+  });
+  lastFirst = chain[0].join();
+  // the end picker is only needed when the selected tile fits both ends and they differ
+  const e = ends(chain), pick = $("#endpick");
+  if (glowL && glowR && e[0] !== e[1]) {
+    pick.hidden = false;
+    $("#pickL").textContent = t("startEnd", { v: e[0] });
+    $("#pickR").textContent = t("farEnd", { v: e[1] });
+  } else pick.hidden = true;
+}
+function renderHand(hand, myTurn, mv) {
+  const h = $("#hand"); h.textContent = "";
+  const n = Math.max(hand.length, 1), W = h.clientWidth || 360;
+  const w = Math.max(34, Math.min(50, Math.floor((W - 8 - (n - 1) * 6) / n)));
+  h.classList.toggle("many", n * (w + 6) > W);
+  const playable = new Set(mv.map(m => m.tile));
+  hand.forEach(tl => {
+    const k = key(tl), b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-label", k);
+    b.innerHTML = tileSVG(tl[0], tl[1], true, w);
+    if (myTurn) b.classList.add(playable.has(k) ? "ok" : "dim");
+    if (sel === k) b.classList.add("sel");
+    b.addEventListener("click", () => onTileTap(k, b));
+    h.appendChild(b);
+  });
+}
+function onTileTap(k, btn) {
+  const v = currentView(); if (!v || v.phase !== "play") return;
+  const shake = () => { btn.classList.remove("shake"); void btn.offsetWidth; btn.classList.add("shake"); };
+  if (v.turn !== G.me) { shake(); return; }
+  const tm = movesFor(v.players[G.me].hand, v.chain).filter(m => m.tile === k);
+  if (!tm.length) { shake(); return; }
+  const e = ends(v.chain);
+  if (tm.length === 1 || (e && e[0] === e[1])) { sel = null; $("#endpick").hidden = true; act({ type: "play", tile: k, side: tm[tm.length - 1].side }); return; }
+  sel = sel === k ? null : k; render();
+}
+function playSel(side) { if (!sel) return; const k = sel; sel = null; $("#endpick").hidden = true; act({ type: "play", tile: k, side }); }
+$("#pickL").addEventListener("click", () => playSel("L"));
+$("#pickR").addEventListener("click", () => playSel("R"));
+$("#pile").addEventListener("click", () => {
+  const v = G && currentView(); if (!v || v.phase !== "play" || v.turn !== G.me) return;
+  if (!movesFor(v.players[G.me].hand, v.chain).length && v.bone > 0) act({ type: "draw" });
+});
+function showResult(v) {
+  const me = G.me, op = 1 - me, nm = names(), r = v.result; if (!r) return;
+  openSheet(sh => {
+    const over = v.phase === "over";
+    let title;
+    if (over) title = v.players[me].score >= v.players[op].score ? t("youWinGame") : t("oppWinGame", { n: nm[op] });
+    else title = r.winner == null ? t("tieRound") : r.winner === me ? t("youWinRound") : t("oppWinRound", { n: nm[op] });
+    sh.appendChild(el("h2", null, title));
+    if (r.winner != null) sh.appendChild(el("p", "sub", t("gotPoints", { p: r.points })));
+    if (r.reason === "blocked") sh.appendChild(el("p", "note", t("blocked")));
+    const tally = el("div", "tally");
+    [me, op].forEach(i => {
+      const av = el("div", "avatar"); setAvatar(av, nm[i], i === me ? profile.small : G.opp && G.opp.small, i !== me && G.opp && G.opp.ai);
+      tally.appendChild(av);
+      const n = el("div", "n", nm[i]); tally.appendChild(n);
+      const s = el("div", "s"); s.appendChild(el("b", null, String(v.players[i].score))); s.appendChild(document.createTextNode("/100")); tally.appendChild(s);
+      const hand = v.players[i].hand || [];
+      if (hand.length) {
+        const rv = el("div", "reveal"); rv.innerHTML = hand.map(tl => tileSVG(tl[0], tl[1], true, 18)).join("");
+        rv.appendChild(el("span", "note", " " + t("pipsLeft", { p: pips(hand) }))); tally.appendChild(rv);
+      }
+    });
+    sh.appendChild(tally);
+    if (over) { sh.appendChild(button("primary", t("playAgain"), () => act({ type: "again" }))); sh.appendChild(button("ghost", t("menu"), leaveGame)); }
+    else sh.appendChild(button("primary", t("nextRound"), () => act({ type: "next" })));
+  });
+}
+function leaveGame() {
+  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); if (G.net) G.net.close(); }
+  G = null; closeSheet(); renderHome(); show("home");
+}
+$("#leaveBtn").addEventListener("click", () => {
+  openSheet(sh => {
+    sh.appendChild(el("h2", null, t("leaveQ")));
+    const row = el("div", "row"); row.appendChild(button("ghost", t("stay"), () => { closeSheet(); render(); })); row.appendChild(button("coral", t("leave"), leaveGame)); sh.appendChild(row);
+  });
+});
+window.addEventListener("resize", () => render());
+
+/* ================= networking =================
+   Inside a claude.ai artifact: the platform's "room" capability (WebRTC is blocked there).
+   Anywhere else (a normal website): PeerJS over WebRTC with its free public broker. */
+const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const makeCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+let roomP = null;
+const getRoom = () => (roomP = roomP || (IN_ARTIFACT ? window.claude.use("room") : Promise.resolve(null)));
+let peerLib = null;
+function loadPeerJS() {
+  if (window.Peer) return Promise.resolve();
+  return peerLib = peerLib || new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
+    s.onload = () => res(); s.onerror = () => { peerLib = null; rej(new Error("peerjs")); }; document.head.appendChild(s);
+  });
+}
+const PEER_PREFIX = "dmn-qm73-";
+async function openHost(code) {
+  if (IN_ARTIFACT) {
+    const room = await getRoom(); if (!room) throw new Error("unavailable");
+    const r = await room.join("dmn-" + code.toLowerCase());
+    room.presence({ table: code, host: myName() }).catch(() => {});
+    const net = { send(d) { r.emit("g", d).catch(() => {}); }, close() { r.leave().catch(() => {}); room.presence({ table: null, host: null }).catch(() => {}); }, peerId: null };
+    r.on("g", m => {
+      if (m.sameTab || !m.data) return;
+      if (!net.peerId) { if (m.data.t !== "hello") return; net.peerId = m.peer; room.presence({ table: null, host: null }).catch(() => {}); }
+      if (m.peer === net.peerId) net.onmsg && net.onmsg(m.data);
+    });
+    r.onPeers(ch => { if (net.peerId && ch.left.some(p => p.peer === net.peerId)) net.onclose && net.onclose(); });
+    return net;
+  }
+  await loadPeerJS();
+  return new Promise((res, rej) => {
+    const peer = new window.Peer(PEER_PREFIX + code);
+    const net = { conn: null, send(d) { if (net.conn && net.conn.open) net.conn.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
+    let ready = false;
+    peer.on("open", () => { ready = true; res(net); });
+    peer.on("error", e => { if (!ready) rej(e); });
+    peer.on("connection", c => {
+      if (net.conn) { c.on("open", () => c.close()); return; }
+      net.conn = c;
+      c.on("data", d => net.onmsg && net.onmsg(d));
+      c.on("close", () => net.onclose && net.onclose());
+    });
+  });
+}
+async function openGuest(code) {
+  if (IN_ARTIFACT) {
+    const room = await getRoom(); if (!room) throw new Error("unavailable");
+    const r = await room.join("dmn-" + code.toLowerCase());
+    const net = { send(d) { r.emit("g", d).catch(() => {}); }, close() { r.leave().catch(() => {}); }, peerId: null };
+    r.on("g", m => {
+      if (m.sameTab || !m.data) return;
+      if (!net.peerId) { if (m.data.t !== "welcome") return; net.peerId = m.peer; }
+      if (m.peer === net.peerId) net.onmsg && net.onmsg(m.data);
+    });
+    r.onPeers(ch => { if (net.peerId && ch.left.some(p => p.peer === net.peerId)) net.onclose && net.onclose(); });
+    return net;
+  }
+  await loadPeerJS();
+  return new Promise((res, rej) => {
+    const peer = new window.Peer();
+    const timer = setTimeout(() => { try { peer.destroy(); } catch (e) {} rej(new Error("timeout")); }, 15000);
+    peer.on("error", e => { clearTimeout(timer); try { peer.destroy(); } catch (x) {} rej(e); });
+    peer.on("open", () => {
+      const c = peer.connect(PEER_PREFIX + code, { reliable: true });
+      const net = { send(d) { if (c.open) c.send(d); }, close() { try { peer.destroy(); } catch (e) {} } };
+      c.on("open", () => { clearTimeout(timer); res(net); });
+      c.on("data", d => net.onmsg && net.onmsg(d));
+      c.on("close", () => net.onclose && net.onclose());
+    });
+  });
+}
+const myCard = () => ({ name: myName(), small: profile.small });
+
+let pending = null; // host waiting for a guest
+async function createTable() {
+  const msg = $("#onlineMsg"); msg.textContent = "";
+  $("#createBtn").disabled = true;
+  try {
+    let code = makeCode(), net;
+    for (let i = 0; i < 3; i++) {
+      try { net = await openHost(code); break; }
+      catch (e) { if (e && e.type === "unavailable-id") { code = makeCode(); continue; } throw e; }
+    }
+    if (!net) throw new Error("fail");
+    pending = net;
+    $("#codeOut").textContent = code; $("#hostIdle").hidden = true; $("#hostWait").hidden = false;
+    $("#copyLinkBtn").hidden = IN_ARTIFACT;
+    net.code = code;
+    net.onmsg = d => {
+      if (!d || d.t !== "hello") return;
+      pending = null;
+      G = { mode: "host", me: 0, opp: cleanProfile(d.p), state: newGame(), net };
+      wireHost(net); resetMarks(); show("game"); sendWelcome(); afterChange();
+      G.tick = setInterval(sendState, 4000);
+    };
+    net.onclose = () => { net.conn = null; net.peerId = null; };
+  } catch (e) {
+    msg.textContent = (e && e.message === "unavailable") ? t("onlineUnavailable") : t("connFail");
+  } finally { $("#createBtn").disabled = false; }
+}
+function wireHost(net) {
+  net.onmsg = d => {
+    if (!G || !d || typeof d !== "object") return;
+    if (d.t === "hello") { G.opp = cleanProfile(d.p); sendWelcome(); render(); }
+    else if (d.t === "act") { if (!doAction(1, d.a)) sendState(); }
+    else if (d.t === "sync") sendState();
+  };
+  net.onclose = opponentGone;
+}
+function sendWelcome() { if (G && G.net) { G.net.send({ t: "welcome", p: myCard() }); sendState(); } }
+function sendState() { if (G && G.mode === "host" && G.net) G.net.send({ t: "state", s: viewFor(G.state, 1) }); }
+function opponentGone() { if (!G) return; const wasGame = !$("#game").hidden; leaveGame(); if (wasGame) toast(t("oppLeft")); }
+function cancelHost() {
+  if (pending) { pending.close(); pending = null; }
+  $("#hostIdle").hidden = false; $("#hostWait").hidden = true;
+}
+async function joinTable(code) {
+  code = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const msg = $("#onlineMsg");
+  if (code.length !== 5) { msg.textContent = t("badCode"); return; }
+  cancelHost();
+  msg.textContent = t("connecting"); $("#joinBtn").disabled = true;
+  try {
+    const net = await openGuest(code);
+    G = { mode: "guest", me: 1, opp: null, view: null, net };
+    let greeted = false, gaveUp = null;
+    const hello = () => net.send({ t: "hello", p: myCard() });
+    hello();
+    G.tick = setInterval(() => { if (!greeted) hello(); }, 2000);
+    gaveUp = setTimeout(() => { if (!greeted && G && G.net === net) { leaveGame(); show("online"); msg.textContent = t("connFail"); } }, 15000);
+    net.onmsg = d => {
+      if (!G || !d || typeof d !== "object") return;
+      if (d.t === "welcome") {
+        G.opp = cleanProfile(d.p);
+        if (!greeted) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; }
+        render();
+      } else if (d.t === "state") {
+        const v = validView(d.s); if (!v) return;
+        if (G.view && v.seq < G.view.seq) return;
+        const first = !G.view; G.view = v;
+        if (first) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; resetMarks(); show("game"); }
+        render();
+      }
+    };
+    net.onclose = opponentGone;
+  } catch (e) {
+    msg.textContent = (e && e.message === "unavailable") ? t("onlineUnavailable") : t("connFail");
+  } finally { $("#joinBtn").disabled = false; }
+}
+
+// lobby list of open tables (artifact rooms only)
+let lobbyOff = null;
+async function startLobby() {
+  if (!IN_ARTIFACT || lobbyOff) return;
+  const room = await getRoom(); if (!room) { $("#onlineMsg").textContent = t("onlineUnavailable"); return; }
+  $("#lobbyCard").hidden = false;
+  const draw = peers => {
+    const box = $("#tables"); box.textContent = "";
+    const open = peers.filter(p => !p.isMe && p.presence && typeof p.presence.table === "string" && /^[A-Z0-9]{5}$/.test(p.presence.table));
+    if (!open.length) { box.appendChild(el("p", "note", t("noTables"))); return; }
+    open.forEach(p => {
+      const row = el("div", "table-item");
+      row.appendChild(el("span", null, String(p.presence.host || "?").slice(0, 20) + " · " + p.presence.table));
+      row.appendChild(button("primary", t("joinRoom"), () => joinTable(p.presence.table)));
+      box.appendChild(row);
+    });
+  };
+  draw(room.peers());
+  lobbyOff = room.onPeers(ch => draw(ch.peers), () => { $("#lobbyCard").hidden = true; });
+}
+
+$("#playAiBtn").addEventListener("click", startAI);
+$("#playOnlineBtn").addEventListener("click", () => { $("#onlineMsg").textContent = ""; show("online"); startLobby(); });
+$("#onlineBack").addEventListener("click", () => { cancelHost(); show("home"); });
+$("#createBtn").addEventListener("click", createTable);
+$("#cancelHost").addEventListener("click", cancelHost);
+$("#joinBtn").addEventListener("click", () => joinTable($("#codeInput").value));
+$("#codeInput").addEventListener("keydown", e => { if (e.key === "Enter") joinTable($("#codeInput").value); });
+$("#copyLinkBtn").addEventListener("click", () => {
+  const link = location.origin + location.pathname + "#join-" + $("#codeOut").textContent;
+  const done = () => toast(t("copied"));
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => toast(link));
+  else toast(link);
+});
+$("#overlay").addEventListener("click", e => { if (e.target.id === "overlay" && G && currentView() && currentView().phase === "play") { closeSheet(); render(); } else if (e.target.id === "overlay" && !G) closeSheet(); });
+
+/* ================= boot ================= */
+function boot(data) {
+  renderSoundBtn(); renderHome();
+  if (data && data.state && data.mode === "ai") {
+    G = { mode: "ai", me: 0, opp: { name: t("computer"), small: null, ai: true }, state: data.state, level: data.level || diff };
+    resetMarks(); show("game"); afterChange(); return;
+  }
+  const m = /^#join-([A-Za-z0-9]{5})$/.exec(location.hash || "");
+  if (m) { show("online"); $("#codeInput").value = m[1].toUpperCase(); startLobby(); joinTable(m[1]); return; }
+  show("home");
+}
+const hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) hot.snapshot(() => (G && G.mode === "ai" ? { mode: "ai", state: G.state, level: G.level } : {}));
+if (hot && hot.ready) hot.ready(boot); else boot(hot && hot.data ? hot.data : {});
+</script>
+</body>
+</html>
