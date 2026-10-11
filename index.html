@@ -298,7 +298,7 @@ const T = {
     photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.", cropTitle:"보일 부분 맞추기", cropHint:"사진을 끌어서 옮기고, 두 손가락이나 아래 막대로 크기를 맞추세요", done:"완료", zoom:"확대",
     defaultName:"나", computer:"컴퓨터",
     createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
-    waiting:"상대를 기다리는 중", copyLink:"링크 복사", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
+    waiting:"상대를 기다리는 중", copyLink:"링크 복사", invite:"초대하기", inviteText:"도미노 한 판 해요! 링크를 누르면 바로 들어와요. (방 코드 {c})", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
     connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", notFound:"그 코드의 방을 찾지 못했어요. 방을 만든 폰에서 게임 화면이 켜져 있는지 확인하세요.", selfJoin:"내가 만든 방이에요. 상대의 폰에서 이 코드로 참가해야 해요.", keepOpen:"코드를 보낸 뒤 이 화면으로 돌아와 켜 두세요.", badCode:"방 코드 5자리를 입력하세요.",
     onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.", relay:"중계 연결",
     round:"{r}판", yourTurn:"내 차례예요", oppTurn:"{n}의 차례", playFirst:"아무 패나 놓아 시작하세요",
@@ -323,7 +323,7 @@ const T = {
     photoFail:"That photo couldn't be read. Pick another one.", cropTitle:"Frame your photo", cropHint:"Drag to move. Pinch or use the slider to zoom.", done:"Done", zoom:"Zoom",
     defaultName:"Me", computer:"Computer",
     createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
-    waiting:"Waiting for an opponent", copyLink:"Copy link", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
+    waiting:"Waiting for an opponent", copyLink:"Copy link", invite:"Invite", inviteText:"Play dominoes with me! Tap the link to join. (Table code {c})", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
     connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", notFound:"No table with that code. Make sure the host still has the game open.", selfJoin:"That's your own table. Your opponent joins with this code on their phone.", keepOpen:"After sending the code, come back and keep this screen open.", badCode:"Enter the 5-letter table code.",
     onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.", relay:"relayed",
     round:"Round {r}", yourTurn:"Your turn", oppTurn:"{n}'s turn", playFirst:"Play any tile to start",
@@ -348,7 +348,7 @@ const T = {
     photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น", cropTitle:"จัดตำแหน่งรูป", cropHint:"ลากเพื่อเลื่อน ใช้สองนิ้วหรือแถบด้านล่างเพื่อซูม", done:"เสร็จ", zoom:"ซูม",
     defaultName:"ฉัน", computer:"คอมพิวเตอร์",
     createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
-    waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
+    waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", invite:"ชวนเพื่อน", inviteText:"มาเล่นโดมิโน่กัน! แตะลิงก์เพื่อเข้าร่วม (รหัสห้อง {c})", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
     connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", notFound:"ไม่พบห้องรหัสนี้ ตรวจสอบว่าผู้สร้างห้องยังเปิดหน้าเกมอยู่", selfJoin:"นี่คือห้องของคุณเอง ให้คู่แข่งใช้รหัสนี้บนโทรศัพท์ของเขา", keepOpen:"ส่งรหัสแล้วกลับมาเปิดหน้านี้ค้างไว้", badCode:"กรอกรหัสห้อง 5 ตัว",
     onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว", relay:"ผ่านรีเลย์",
     round:"รอบที่ {r}", yourTurn:"ตาของคุณ", oppTurn:"ตาของ {n}", playFirst:"วางไพ่ใบใดก็ได้เพื่อเริ่ม",
@@ -1178,11 +1178,17 @@ $("#createBtn").addEventListener("click", createTable);
 $("#cancelHost").addEventListener("click", cancelHost);
 $("#joinBtn").addEventListener("click", () => joinTable($("#codeInput").value));
 $("#codeInput").addEventListener("keydown", e => { if (e.key === "Enter") joinTable($("#codeInput").value); });
+// Invite through the phone's share sheet (KakaoTalk, messages, ...); copy the link where that isn't available.
+if (navigator.share) $("#copyLinkBtn").textContent = t("invite");
 $("#copyLinkBtn").addEventListener("click", () => {
-  const link = location.origin + location.pathname + "#join-" + $("#codeOut").textContent;
-  const done = () => toast(t("copied"));
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => toast(link));
-  else toast(link);
+  const code = $("#codeOut").textContent, link = location.origin + location.pathname + "#join-" + code;
+  const copy = () => {
+    const done = () => toast(t("copied"));
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => toast(link));
+    else toast(link);
+  };
+  if (navigator.share) navigator.share({ title: t("appName"), text: t("inviteText", { c: code }), url: link }).catch(e => { if (!e || e.name !== "AbortError") copy(); });
+  else copy();
 });
 $("#overlay").addEventListener("click", e => { if (e.target.id === "overlay" && G && currentView() && currentView().phase === "play") { closeSheet(); render(); } else if (e.target.id === "overlay" && !G) closeSheet(); });
 
