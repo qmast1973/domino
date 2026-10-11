@@ -297,7 +297,7 @@ const T = {
     connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", notFound:"그 코드의 방을 찾지 못했어요. 방을 만든 폰에서 게임 화면이 켜져 있는지 확인하세요.", selfJoin:"내가 만든 방이에요. 상대의 폰에서 이 코드로 참가해야 해요.", keepOpen:"코드를 보낸 뒤 이 화면으로 돌아와 켜 두세요.", badCode:"방 코드 5자리를 입력하세요.",
     onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.", relay:"중계 연결",
     round:"{r}판", yourTurn:"내 차례예요", oppTurn:"{n}의 차례", playFirst:"아무 패나 놓아 시작하세요",
-    mustDraw:"낼 패가 없어요. 더미를 눌러 한 장 뽑으세요", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
+    mustDraw:"낼 패가 없어서 맞는 패가 나올 때까지 뽑는 중…", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
     chooseEnd:"어느 쪽 끝에 붙일까요?", startEnd:"앞쪽 끝 {v}", farEnd:"뒤쪽 끝 {v}",
     youWinRound:"이번 판 승리!", oppWinRound:"{n}의 승리", tieRound:"무승부라 점수가 없어요",
     gotPoints:"+{p}점", blocked:"둘 다 낼 패가 없어 막혔어요. 남은 점수가 적은 쪽이 이겨요.",
@@ -306,7 +306,7 @@ const T = {
     rulesTitle:"게임 규칙", close:"닫기",
     r1:"0-0부터 6-6까지 28장 중 7장씩 받아요.",
     r2:"바닥 줄의 양 끝 숫자와 같은 숫자가 있는 패를 이어 붙여요.",
-    r3:"낼 패가 없으면 더미에서 한 장씩 뽑아요. 더미가 비었으면 패스해요.",
+    r3:"낼 패가 없으면 맞는 패가 나올 때까지 더미에서 자동으로 뽑아요. 더미가 비었으면 패스해요.",
     r4:"먼저 패를 다 내면 상대 손에 남은 점의 합을 점수로 가져가요.",
     r5:"둘 다 못 내서 막히면, 남은 점이 적은 쪽이 상대의 남은 점을 가져가요.",
     r6:"100점에 먼저 닿는 사람이 최종 승리해요."
@@ -322,7 +322,7 @@ const T = {
     connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", notFound:"No table with that code. Make sure the host still has the game open.", selfJoin:"That's your own table. Your opponent joins with this code on their phone.", keepOpen:"After sending the code, come back and keep this screen open.", badCode:"Enter the 5-letter table code.",
     onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.", relay:"relayed",
     round:"Round {r}", yourTurn:"Your turn", oppTurn:"{n}'s turn", playFirst:"Play any tile to start",
-    mustDraw:"No move. Tap the pile to draw a tile", mustPass:"No move and nothing left to draw", pass:"Pass",
+    mustDraw:"No move. Drawing until a tile fits…", mustPass:"No move and nothing left to draw", pass:"Pass",
     chooseEnd:"Which end?", startEnd:"Start end {v}", farEnd:"Far end {v}",
     youWinRound:"You won the round!", oppWinRound:"{n} won the round", tieRound:"Tie, no points",
     gotPoints:"+{p} points", blocked:"Blocked: nobody can move. The lower hand wins.",
@@ -331,7 +331,7 @@ const T = {
     rulesTitle:"How to play", close:"Close",
     r1:"Each player gets 7 of the 28 tiles (0-0 to 6-6).",
     r2:"Play a tile whose number matches one of the two open ends.",
-    r3:"No match? Draw from the pile one tile at a time. If the pile is empty, pass.",
+    r3:"No match? Tiles are drawn from the pile automatically until one fits. If the pile is empty, pass.",
     r4:"Empty your hand first to score the pips left in your opponent's hand.",
     r5:"If nobody can move, the lower hand wins and scores the other hand's pips.",
     r6:"First to 100 points wins the game."
@@ -347,7 +347,7 @@ const T = {
     connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", notFound:"ไม่พบห้องรหัสนี้ ตรวจสอบว่าผู้สร้างห้องยังเปิดหน้าเกมอยู่", selfJoin:"นี่คือห้องของคุณเอง ให้คู่แข่งใช้รหัสนี้บนโทรศัพท์ของเขา", keepOpen:"ส่งรหัสแล้วกลับมาเปิดหน้านี้ค้างไว้", badCode:"กรอกรหัสห้อง 5 ตัว",
     onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว", relay:"ผ่านรีเลย์",
     round:"รอบที่ {r}", yourTurn:"ตาของคุณ", oppTurn:"ตาของ {n}", playFirst:"วางไพ่ใบใดก็ได้เพื่อเริ่ม",
-    mustDraw:"ไม่มีไพ่ลง แตะกองเพื่อจั่ว", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
+    mustDraw:"ไม่มีไพ่ลง กำลังจั่วจนกว่าจะได้ไพ่ที่ลงได้…", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
     chooseEnd:"จะต่อด้านไหน?", startEnd:"ด้านต้น {v}", farEnd:"ด้านปลาย {v}",
     youWinRound:"คุณชนะรอบนี้!", oppWinRound:"{n} ชนะรอบนี้", tieRound:"เสมอ ไม่มีแต้ม",
     gotPoints:"+{p} แต้ม", blocked:"เกมตัน ไม่มีใครลงได้ คนที่แต้มในมือน้อยกว่าชนะ",
@@ -356,7 +356,7 @@ const T = {
     rulesTitle:"วิธีเล่น", close:"ปิด",
     r1:"แต่ละคนได้ไพ่ 7 ใบจากทั้งหมด 28 ใบ (0-0 ถึง 6-6)",
     r2:"วางไพ่ที่มีตัวเลขตรงกับปลายด้านใดด้านหนึ่ง",
-    r3:"ถ้าไม่มีไพ่ลง ให้จั่วทีละใบ ถ้ากองหมดให้ผ่าน",
+    r3:"ถ้าไม่มีไพ่ลง ระบบจะจั่วให้อัตโนมัติจนกว่าจะได้ไพ่ที่ลงได้ ถ้ากองหมดให้ผ่าน",
     r4:"ใครลงไพ่หมดก่อน ได้แต้มเท่ากับแต้มที่เหลือในมือคู่แข่ง",
     r5:"ถ้าเกมตัน คนที่แต้มในมือน้อยกว่าชนะและได้แต้มของอีกฝ่าย",
     r6:"ใครถึง 100 แต้มก่อนชนะเกม"
@@ -488,7 +488,11 @@ function applyAction(s, pi, a) {
     if (!me.hand.length) endRound(s, "domino"); else s.turn = 1 - pi;
     return true;
   }
-  if (a.type === "draw") { if (mv.length || !s.bone.length) return false; me.hand.push(s.bone.pop()); return true; }
+  if (a.type === "draw") {
+    if (mv.length || !s.bone.length) return false;
+    do { me.hand.push(s.bone.pop()); } while (s.bone.length && !movesFor(me.hand, s.chain).length);
+    return true;
+  }
   if (a.type === "pass") {
     if (mv.length || s.bone.length) return false;
     s.passes++;
@@ -725,7 +729,7 @@ function render() {
     if (myTurn) {
       if (!v.chain.length) st.textContent = t("playFirst");
       else if (mv.length) st.textContent = t("yourTurn");
-      else if (v.bone > 0) st.textContent = t("mustDraw");
+      else if (v.bone > 0) { st.textContent = t("mustDraw"); autoDraw(); }
       else { st.appendChild(el("span", null, t("mustPass"))); st.appendChild(button("primary", t("pass"), () => act({ type: "pass" }))); }
     } else st.textContent = t("oppTurn", { n: nm[op] });
   }
@@ -738,6 +742,16 @@ function render() {
   else if (v.phase === "play" && lastPhase && lastPhase !== "play") closeSheet();
   else if (v.phase !== "play" && $("#overlay").hidden) showResult(v);
   lastChainLen = v.chain.length; lastMyCount = v.players[me].count; lastPhase = v.phase;
+}
+// No playable tile on my turn: draw without waiting for a tap (pause briefly so the player sees why).
+function autoDraw() {
+  if (G.autoT) return;
+  G.autoT = setTimeout(() => {
+    if (!G) return;
+    G.autoT = null;
+    const v = currentView();
+    if (v && v.phase === "play" && v.turn === G.me && v.bone > 0 && !movesFor(v.players[G.me].hand || [], v.chain).length) act({ type: "draw" });
+  }, 700);
 }
 function renderRound(v) {
   v = v || (G && currentView()); if (!v) return;
@@ -853,7 +867,7 @@ function showResult(v) {
   });
 }
 function leaveGame() {
-  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearPend(); if (G.net) G.net.close(); }
+  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearTimeout(G.autoT); clearPend(); if (G.net) G.net.close(); }
   G = null; closeSheet(); renderHome(); show("home");
 }
 $("#leaveBtn").addEventListener("click", () => {
