@@ -295,7 +295,7 @@ const T = {
     appName:"도미노", tagline:"100점에 먼저 닿는 사람이 승리", profileHint:"상대에게 보이는 이름과 사진", editProfile:"프로필 편집",
     easy:"쉬움", normal:"보통", playAI:"컴퓨터와 대결", playOnline:"온라인 대결", rules:"규칙 보기",
     photo:"사진 선택", removePhoto:"사진 지우기", name:"이름", save:"저장", cancel:"취소", saved:"저장했어요",
-    photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.", cropTitle:"보일 부분 맞추기", cropHint:"사진을 끌어서 옮기고, 두 손가락이나 아래 막대로 크기를 맞추세요", done:"완료", zoom:"확대",
+    photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.", cropTitle:"보일 부분 맞추기", photoLoading:"사진 불러오는 중…", cropHint:"사진을 끌어서 옮기고, 두 손가락이나 아래 막대로 크기를 맞추세요", done:"완료", zoom:"확대",
     defaultName:"나", computer:"컴퓨터",
     createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
     waiting:"상대를 기다리는 중", copyLink:"링크 복사", invite:"초대하기", inviteText:"도미노 한 판 해요! 링크를 누르면 바로 들어와요. (방 코드 {c})", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
@@ -320,7 +320,7 @@ const T = {
     appName:"Dominoes", tagline:"First to 100 points wins", profileHint:"Name and photo your opponent sees", editProfile:"Edit profile",
     easy:"Easy", normal:"Normal", playAI:"Play the computer", playOnline:"Play online", rules:"How to play",
     photo:"Choose photo", removePhoto:"Remove photo", name:"Name", save:"Save", cancel:"Cancel", saved:"Saved",
-    photoFail:"That photo couldn't be read. Pick another one.", cropTitle:"Frame your photo", cropHint:"Drag to move. Pinch or use the slider to zoom.", done:"Done", zoom:"Zoom",
+    photoFail:"That photo couldn't be read. Pick another one.", cropTitle:"Frame your photo", photoLoading:"Loading photo…", cropHint:"Drag to move. Pinch or use the slider to zoom.", done:"Done", zoom:"Zoom",
     defaultName:"Me", computer:"Computer",
     createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
     waiting:"Waiting for an opponent", copyLink:"Copy link", invite:"Invite", inviteText:"Play dominoes with me! Tap the link to join. (Table code {c})", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
@@ -345,7 +345,7 @@ const T = {
     appName:"โดมิโน่", tagline:"ใครถึง 100 แต้มก่อนชนะ", profileHint:"ชื่อและรูปที่คู่แข่งเห็น", editProfile:"แก้ไขโปรไฟล์",
     easy:"ง่าย", normal:"ปกติ", playAI:"เล่นกับคอมพิวเตอร์", playOnline:"เล่นออนไลน์", rules:"วิธีเล่น",
     photo:"เลือกรูป", removePhoto:"ลบรูป", name:"ชื่อ", save:"บันทึก", cancel:"ยกเลิก", saved:"บันทึกแล้ว",
-    photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น", cropTitle:"จัดตำแหน่งรูป", cropHint:"ลากเพื่อเลื่อน ใช้สองนิ้วหรือแถบด้านล่างเพื่อซูม", done:"เสร็จ", zoom:"ซูม",
+    photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น", cropTitle:"จัดตำแหน่งรูป", photoLoading:"กำลังโหลดรูป…", cropHint:"ลากเพื่อเลื่อน ใช้สองนิ้วหรือแถบด้านล่างเพื่อซูม", done:"เสร็จ", zoom:"ซูม",
     defaultName:"ฉัน", computer:"คอมพิวเตอร์",
     createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
     waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", invite:"ชวนเพื่อน", inviteText:"มาเล่นโดมิโน่กัน! แตะลิงก์เพื่อเข้าร่วม (รหัสห้อง {c})", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
@@ -597,14 +597,38 @@ $("#removePhoto").addEventListener("click", () => { draft.avatar = draft.small =
 $("#nameInput").addEventListener("input", () => { if (!draft.avatar) setAvatar($("#editAvatar"), $("#nameInput").value || myName(), null); });
 // Photos from a phone camera can be huge. Decode once, shrink to a working copy, let the player pick
 // the visible part, then keep only a small crop (192px for the profile, ~48px for the opponent).
-async function decodePhoto(f) {
-  if (window.createImageBitmap) { try { return await createImageBitmap(f); } catch (e) {} }
+// Try the cheapest decoder first: a bitmap decoded straight at a reduced size uses a fraction of the
+// memory of a full 12-50MP camera photo, which is what makes phone browsers give up.
+function viaImg(blob) {
   return new Promise((res, rej) => {
-    const url = URL.createObjectURL(f), img = new Image();
-    img.onload = () => { res(img); setTimeout(() => URL.revokeObjectURL(url), 0); };
+    const url = URL.createObjectURL(blob), img = new Image();
+    img.onload = () => { const ok = () => { res(img); setTimeout(() => URL.revokeObjectURL(url), 0); }; img.decode ? img.decode().then(ok, ok) : ok(); };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
     img.src = url;
   });
+}
+let heicLib = null;
+function loadHeic() {
+  return heicLib = heicLib || new Promise((res, rej) => {
+    const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+    sc.onload = () => window.heic2any ? res(window.heic2any) : rej(new Error("heic")); sc.onerror = () => { heicLib = null; rej(new Error("heic")); };
+    document.head.appendChild(sc);
+  });
+}
+async function decodePhoto(f) {
+  const isHeic = /hei[cf]/i.test(f.type || "") || /\.hei[cf]$/i.test(f.name || "");
+  const tries = [];
+  if (!isHeic && window.createImageBitmap) {
+    tries.push(() => createImageBitmap(f, { resizeWidth: 1200, resizeQuality: "high" }));
+    tries.push(() => createImageBitmap(f));
+  }
+  if (!isHeic) tries.push(() => viaImg(f));
+  // HEIC ("high efficiency" camera setting) most browsers can't open: convert it to JPEG first
+  tries.push(async () => { const conv = await loadHeic(); let out = await conv({ blob: f, toType: "image/jpeg", quality: .8 }); if (Array.isArray(out)) out = out[0]; return viaImg(out); });
+  for (const attempt of tries) {
+    try { const b = await attempt(); if (b && (b.width || b.naturalWidth)) return b; } catch (e) {}
+  }
+  throw new Error("decode");
 }
 function shrink(src, max) {
   const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
@@ -681,8 +705,13 @@ function openCropper(work) {
 $("#photoInput").addEventListener("change", async e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
-  try { openCropper(shrink(await decodePhoto(f), 1200)); }
-  catch (err) { $("#profileMsg").textContent = t("photoFail"); }
+  $("#profileMsg").textContent = t("photoLoading");
+  try { const work = shrink(await decodePhoto(f), 1200); $("#profileMsg").textContent = ""; openCropper(work); }
+  catch (err) {
+    // say what the file was, so a failure can be told apart (format / size)
+    const kind = (f.type || (f.name || "").split(".").pop() || "?").replace("image/", "").toUpperCase();
+    $("#profileMsg").textContent = t("photoFail") + " (" + kind + ", " + (f.size / 1048576).toFixed(1) + "MB)";
+  }
   finally { e.target.value = ""; }
 });
 $("#saveProfile").addEventListener("click", () => {
