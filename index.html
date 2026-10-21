@@ -102,6 +102,24 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
 .count{min-width:30px;height:38px;border-radius:7px;background:var(--coral);color:var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-size:19px;font-variant-numeric:tabular-nums;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
 .backs{display:flex;gap:2px;flex-wrap:wrap;max-width:110px}
 .backs i{width:7px;height:13px;border-radius:2px;background:var(--brass);opacity:.8}
+#opps{display:grid;gap:8px}
+.pbar.mini{position:relative;flex-direction:column;gap:3px;padding:8px 6px 6px;min-width:0}
+.pbar.mini .avatar{width:36px;height:36px;font-size:15px;box-shadow:0 0 0 2px var(--ivory)}
+.pbar.mini .who{align-items:center;width:100%}
+.pbar.mini .name{font-size:14px;max-width:100%;text-align:center}
+.pbar.mini .score{font-size:12px}
+.pbar.mini .score b{font-size:14px}
+.pbar.mini .count{position:absolute;top:6px;right:6px;min-width:22px;height:28px;font-size:15px;border-radius:6px}
+.seats{display:flex;flex-direction:column;gap:8px}
+.seat{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:12px;padding:6px 10px;min-height:48px}
+.seat .avatar{width:36px;height:36px;font-size:15px;box-shadow:0 0 0 2px var(--ivory)}
+.seat .sname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-display);font-size:17px}
+.seat.empty .sname{color:var(--muted);font-family:var(--f-body);font-size:14px}
+.seat.empty::before{content:"";flex:none;width:36px;height:36px;border-radius:50%;border:1.5px dashed var(--muted);opacity:.6;box-sizing:border-box}
+.tag{flex:none;font-size:12px;color:var(--ink);background:var(--brass);border-radius:6px;padding:2px 7px}
+.seat .btn{flex:none;min-height:32px;font-size:14px;padding:0 10px}
+.seat-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.seat-head .note{font-variant-numeric:tabular-nums}
 .gtop{display:flex;align-items:center;gap:8px}
 .gtop .round{flex:1;text-align:center;font-family:var(--f-display);color:var(--muted);font-size:15px}
 
@@ -187,6 +205,14 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
       <button type="button" data-diff="normal" data-i18n="normal">보통</button>
       <button type="button" data-diff="hard" data-i18n="hard">어려움</button>
     </div>
+    <div class="field">
+      <label data-i18n="opponents">컴퓨터 상대</label>
+      <div class="seg" role="group" id="aiSeg">
+        <button type="button" data-n="1"></button>
+        <button type="button" data-n="2"></button>
+        <button type="button" data-n="3"></button>
+      </div>
+    </div>
     <button class="btn primary" id="playAiBtn" data-i18n="playAI">컴퓨터와 대결</button>
     <button class="btn coral" id="playOnlineBtn" data-i18n="playOnline">온라인 대결</button>
   </div>
@@ -223,19 +249,8 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
     <h2 data-i18n="playOnline">온라인 대결</h2>
   </div>
   <div class="card" id="hostCard">
-    <div id="hostIdle">
-      <button class="btn primary" id="createBtn" style="width:100%" data-i18n="createRoom">방 만들기</button>
-    </div>
-    <div id="hostWait" hidden style="display:flex;flex-direction:column;gap:10px">
-      <p class="note" data-i18n="shareCode" style="text-align:center"></p>
-      <div class="code" id="codeOut">-----</div>
-      <p class="note waiting-dots" style="text-align:center" data-i18n="waiting"></p>
-      <p class="note" style="text-align:center" data-i18n="keepOpen"></p>
-      <div class="row">
-        <button class="btn" id="copyLinkBtn" data-i18n="copyLink">링크 복사</button>
-        <button class="btn ghost" id="cancelHost" data-i18n="cancel">취소</button>
-      </div>
-    </div>
+    <button class="btn primary" id="createBtn" data-i18n="createRoom">방 만들기</button>
+    <p class="note" data-i18n="createHint"></p>
   </div>
   <div class="card" id="lobbyCard" hidden>
     <h3 data-i18n="openTables">열린 방</h3>
@@ -253,6 +268,30 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
   </div>
 </section>
 
+<!-- WAITING ROOM -->
+<section id="wait" class="screen" hidden>
+  <div class="topbar">
+    <button class="icon-btn" id="waitBack" aria-label="leave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 data-i18n="playOnline">온라인 대결</h2>
+  </div>
+  <div class="card">
+    <p class="note" data-i18n="shareCode" style="text-align:center"></p>
+    <div class="code" id="codeOut">-----</div>
+    <button class="btn" id="copyLinkBtn" data-i18n="copyLink">링크 복사</button>
+    <p class="note" style="text-align:center" id="keepOpenNote" data-i18n="keepOpen"></p>
+  </div>
+  <div class="card">
+    <div class="seat-head"><h3 data-i18n="playersTitle">참가자</h3><span class="note" id="playersCount"></span></div>
+    <div class="seats" id="seatList"></div>
+    <div class="row" id="hostCtrls">
+      <button class="btn" id="addAiBtn" data-i18n="addAI">컴퓨터 추가</button>
+      <button class="btn primary" id="startBtn" data-i18n="start">게임 시작</button>
+    </div>
+    <p class="note" id="startHint" data-i18n="needTwo"></p>
+    <p class="note waiting-dots" id="guestNote" data-i18n="waitHost"></p>
+  </div>
+</section>
+
 <!-- GAME -->
 <section id="game" class="screen" hidden>
   <div class="gtop">
@@ -261,12 +300,7 @@ input[type=text]{font:inherit;font-size:17px;color:var(--ink);background:var(--i
     <button class="icon-btn" id="soundBtn" aria-label="sound"></button>
     <button class="icon-btn" id="gameRulesBtn" aria-label="rules">?</button>
   </div>
-  <div class="pbar" id="oppBar">
-    <div class="avatar" id="oppAvatar"></div>
-    <div class="who"><span class="name" id="oppName"></span><span class="score" id="oppScore"></span></div>
-    <div class="backs" id="oppBacks"></div>
-    <div class="count" id="oppCount"></div>
-  </div>
+  <div id="opps"></div>
   <div class="felt" id="felt">
     <div id="board"></div>
     <button id="pile" aria-label="draw"><span class="stack"></span><b id="pileCount"></b></button>
@@ -302,7 +336,7 @@ const T = {
     photo:"사진 선택", removePhoto:"사진 지우기", name:"이름", save:"저장", cancel:"취소", saved:"저장했어요",
     photoFail:"이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.", cropTitle:"보일 부분 맞추기", photoLoading:"사진 불러오는 중…", cropHint:"사진을 끌어서 옮기고, 두 손가락이나 아래 막대로 크기를 맞추세요", done:"완료", zoom:"확대",
     defaultName:"나", computer:"컴퓨터",
-    createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"이 코드를 상대에게 알려주세요",
+    createRoom:"방 만들기", joinRoom:"참가", codePh:"방 코드 (5자리)", shareCode:"같이 할 사람들에게 이 코드를 알려주세요",
     waiting:"상대를 기다리는 중", copyLink:"링크 복사", invite:"초대하기", inviteText:"도미노 한 판 해요! 링크를 누르면 바로 들어와요. (방 코드 {c})", copied:"링크를 복사했어요", openTables:"지금 열린 방", noTables:"아직 열린 방이 없어요. 방을 만들어 보세요.",
     connecting:"연결 중…", connFail:"연결하지 못했어요. 코드를 확인하고 다시 시도하세요.", notFound:"그 코드의 방을 찾지 못했어요. 방을 만든 폰에서 게임 화면이 켜져 있는지 확인하세요.", selfJoin:"내가 만든 방이에요. 상대의 폰에서 이 코드로 참가해야 해요.", keepOpen:"코드를 보낸 뒤 이 화면으로 돌아와 켜 두세요.", badCode:"방 코드 5자리를 입력하세요.",
     onlineUnavailable:"이 화면에서는 온라인 대결을 열 수 없어요.", oppLeft:"상대가 게임을 나갔어요.", relay:"중계 연결",
@@ -310,15 +344,16 @@ const T = {
     mustDraw:"낼 패가 없어서 맞는 패가 나올 때까지 뽑는 중…", mustPass:"낼 패도 뽑을 패도 없어요", pass:"패스",
     chooseEnd:"어느 쪽 끝에 붙일까요?", startEnd:"앞쪽 끝 {v}", farEnd:"뒤쪽 끝 {v}",
     youWinRound:"이번 판 승리!", oppWinRound:"{n}의 승리", tieRound:"무승부라 점수가 없어요",
-    gotPoints:"+{p}점", blocked:"둘 다 낼 패가 없어 막혔어요. 남은 점수가 적은 쪽이 이겨요.",
+    gotPoints:"+{p}점", blocked:"아무도 낼 패가 없어 막혔어요. 남은 점수가 가장 적은 사람이 이겨요.",
     nextRound:"다음 판", youWinGame:"최종 승리! 축하해요", oppWinGame:"{n}의 최종 승리", playAgain:"다시 하기", menu:"메뉴로",
     leaveQ:"이 게임을 그만둘까요?", leave:"그만두기", stay:"계속하기", pipsLeft:"남은 점 {p}",
+    opponents:"컴퓨터 상대", nPeople:"{n}명", computerN:"컴퓨터 {n}", createHint:"최대 4명까지 같이 할 수 있어요. 빈자리는 컴퓨터로 채울 수 있어요.", playersTitle:"참가자", players:"{a}/4명", emptySeat:"빈 자리", hostTag:"방장", addAI:"컴퓨터 추가", start:"게임 시작", remove:"빼기", needTwo:"2명 이상 모이면 시작할 수 있어요.", waitHost:"방장이 시작하길 기다리는 중", tableFull:"이미 시작했거나 자리가 다 찬 방이에요.", hostLeft:"방장이 게임을 나갔어요.", replacedByAI:"{n} 님이 나가서 컴퓨터가 대신해요.", joined:"{n} 님이 들어왔어요.", leftLobby:"{n} 님이 나갔어요.",
     rulesTitle:"게임 규칙", close:"닫기",
-    r1:"0-0부터 6-6까지 28장 중 7장씩 받아요.",
+    r1:"0-0부터 6-6까지 28장으로 해요. 2명이면 7장씩, 3~4명이면 5장씩 받아요.",
     r2:"바닥 줄의 양 끝 숫자와 같은 숫자가 있는 패를 이어 붙여요.",
     r3:"낼 패가 없으면 맞는 패가 나올 때까지 더미에서 자동으로 뽑아요. 더미가 비었으면 패스해요.",
-    r4:"먼저 패를 다 내면 상대 손에 남은 점의 합을 점수로 가져가요.",
-    r5:"둘 다 못 내서 막히면, 남은 점이 적은 쪽이 상대의 남은 점을 가져가요.",
+    r4:"먼저 패를 다 내면 다른 사람들 손에 남은 점을 모두 합쳐 점수로 가져가요.",
+    r5:"아무도 못 내서 막히면, 남은 점이 가장 적은 사람이 다른 사람들의 남은 점을 가져가요.",
     r6:"100점에 먼저 닿는 사람이 최종 승리해요."
   },
   en: {
@@ -327,7 +362,7 @@ const T = {
     photo:"Choose photo", removePhoto:"Remove photo", name:"Name", save:"Save", cancel:"Cancel", saved:"Saved",
     photoFail:"That photo couldn't be read. Pick another one.", cropTitle:"Frame your photo", photoLoading:"Loading photo…", cropHint:"Drag to move. Pinch or use the slider to zoom.", done:"Done", zoom:"Zoom",
     defaultName:"Me", computer:"Computer",
-    createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to your opponent",
+    createRoom:"Create a table", joinRoom:"Join", codePh:"Table code (5 letters)", shareCode:"Send this code to the people you want to play with",
     waiting:"Waiting for an opponent", copyLink:"Copy link", invite:"Invite", inviteText:"Play dominoes with me! Tap the link to join. (Table code {c})", copied:"Link copied", openTables:"Open tables", noTables:"No open tables yet. Create one.",
     connecting:"Connecting…", connFail:"Couldn't connect. Check the code and try again.", notFound:"No table with that code. Make sure the host still has the game open.", selfJoin:"That's your own table. Your opponent joins with this code on their phone.", keepOpen:"After sending the code, come back and keep this screen open.", badCode:"Enter the 5-letter table code.",
     onlineUnavailable:"Online play isn't available on this page.", oppLeft:"Your opponent left the game.", relay:"relayed",
@@ -335,15 +370,16 @@ const T = {
     mustDraw:"No move. Drawing until a tile fits…", mustPass:"No move and nothing left to draw", pass:"Pass",
     chooseEnd:"Which end?", startEnd:"Start end {v}", farEnd:"Far end {v}",
     youWinRound:"You won the round!", oppWinRound:"{n} won the round", tieRound:"Tie, no points",
-    gotPoints:"+{p} points", blocked:"Blocked: nobody can move. The lower hand wins.",
+    gotPoints:"+{p} points", blocked:"Blocked: nobody can move. The lowest hand wins.",
     nextRound:"Next round", youWinGame:"You won the game!", oppWinGame:"{n} won the game", playAgain:"Play again", menu:"Menu",
     leaveQ:"Leave this game?", leave:"Leave", stay:"Keep playing", pipsLeft:"{p} pips left",
+    opponents:"Computer opponents", nPeople:"{n}", computerN:"Computer {n}", createHint:"Up to 4 players. Fill empty seats with the computer.", playersTitle:"Players", players:"{a}/4", emptySeat:"Open seat", hostTag:"Host", addAI:"Add computer", start:"Start game", remove:"Remove", needTwo:"You can start once 2 or more players are in.", waitHost:"Waiting for the host to start", tableFull:"That table is full or already playing.", hostLeft:"The host left the game.", replacedByAI:"{n} left. The computer takes over.", joined:"{n} joined.", leftLobby:"{n} left.",
     rulesTitle:"How to play", close:"Close",
-    r1:"Each player gets 7 of the 28 tiles (0-0 to 6-6).",
+    r1:"28 tiles (0-0 to 6-6). With 2 players each gets 7, with 3 or 4 players each gets 5.",
     r2:"Play a tile whose number matches one of the two open ends.",
     r3:"No match? Tiles are drawn from the pile automatically until one fits. If the pile is empty, pass.",
-    r4:"Empty your hand first to score the pips left in your opponent's hand.",
-    r5:"If nobody can move, the lower hand wins and scores the other hand's pips.",
+    r4:"Empty your hand first to score the pips left in everyone else's hands.",
+    r5:"If nobody can move, the lowest hand wins and scores the pips in the other hands.",
     r6:"First to 100 points wins the game."
   },
   th: {
@@ -352,7 +388,7 @@ const T = {
     photo:"เลือกรูป", removePhoto:"ลบรูป", name:"ชื่อ", save:"บันทึก", cancel:"ยกเลิก", saved:"บันทึกแล้ว",
     photoFail:"อ่านรูปนี้ไม่ได้ กรุณาเลือกรูปอื่น", cropTitle:"จัดตำแหน่งรูป", photoLoading:"กำลังโหลดรูป…", cropHint:"ลากเพื่อเลื่อน ใช้สองนิ้วหรือแถบด้านล่างเพื่อซูม", done:"เสร็จ", zoom:"ซูม",
     defaultName:"ฉัน", computer:"คอมพิวเตอร์",
-    createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คู่แข่ง",
+    createRoom:"สร้างห้อง", joinRoom:"เข้าร่วม", codePh:"รหัสห้อง (5 ตัว)", shareCode:"ส่งรหัสนี้ให้คนที่อยากเล่นด้วย",
     waiting:"กำลังรอคู่แข่ง", copyLink:"คัดลอกลิงก์", invite:"ชวนเพื่อน", inviteText:"มาเล่นโดมิโน่กัน! แตะลิงก์เพื่อเข้าร่วม (รหัสห้อง {c})", copied:"คัดลอกลิงก์แล้ว", openTables:"ห้องที่เปิดอยู่", noTables:"ยังไม่มีห้องที่เปิด ลองสร้างห้องดูสิ",
     connecting:"กำลังเชื่อมต่อ…", connFail:"เชื่อมต่อไม่ได้ ตรวจสอบรหัสแล้วลองอีกครั้ง", notFound:"ไม่พบห้องรหัสนี้ ตรวจสอบว่าผู้สร้างห้องยังเปิดหน้าเกมอยู่", selfJoin:"นี่คือห้องของคุณเอง ให้คู่แข่งใช้รหัสนี้บนโทรศัพท์ของเขา", keepOpen:"ส่งรหัสแล้วกลับมาเปิดหน้านี้ค้างไว้", badCode:"กรอกรหัสห้อง 5 ตัว",
     onlineUnavailable:"หน้านี้เล่นออนไลน์ไม่ได้", oppLeft:"คู่แข่งออกจากเกมแล้ว", relay:"ผ่านรีเลย์",
@@ -360,15 +396,16 @@ const T = {
     mustDraw:"ไม่มีไพ่ลง กำลังจั่วจนกว่าจะได้ไพ่ที่ลงได้…", mustPass:"ไม่มีไพ่ลงและไม่มีให้จั่ว", pass:"ผ่าน",
     chooseEnd:"จะต่อด้านไหน?", startEnd:"ด้านต้น {v}", farEnd:"ด้านปลาย {v}",
     youWinRound:"คุณชนะรอบนี้!", oppWinRound:"{n} ชนะรอบนี้", tieRound:"เสมอ ไม่มีแต้ม",
-    gotPoints:"+{p} แต้ม", blocked:"เกมตัน ไม่มีใครลงได้ คนที่แต้มในมือน้อยกว่าชนะ",
+    gotPoints:"+{p} แต้ม", blocked:"เกมตัน ไม่มีใครลงได้ คนที่แต้มในมือน้อยที่สุดชนะ",
     nextRound:"รอบถัดไป", youWinGame:"คุณชนะเกมนี้!", oppWinGame:"{n} ชนะเกมนี้", playAgain:"เล่นอีกครั้ง", menu:"เมนู",
     leaveQ:"ออกจากเกมนี้?", leave:"ออก", stay:"เล่นต่อ", pipsLeft:"เหลือ {p} แต้ม",
+    opponents:"คู่แข่งคอมพิวเตอร์", nPeople:"{n} คน", computerN:"คอมพิวเตอร์ {n}", createHint:"เล่นได้สูงสุด 4 คน ที่ว่างให้คอมพิวเตอร์เล่นแทนได้", playersTitle:"ผู้เล่น", players:"{a}/4 คน", emptySeat:"ที่ว่าง", hostTag:"เจ้าของห้อง", addAI:"เพิ่มคอมพิวเตอร์", start:"เริ่มเกม", remove:"เอาออก", needTwo:"เริ่มได้เมื่อมีผู้เล่นตั้งแต่ 2 คนขึ้นไป", waitHost:"รอเจ้าของห้องเริ่มเกม", tableFull:"ห้องนี้เต็มหรือเริ่มเล่นไปแล้ว", hostLeft:"เจ้าของห้องออกจากเกมแล้ว", replacedByAI:"{n} ออกไปแล้ว คอมพิวเตอร์เล่นแทน", joined:"{n} เข้าร่วมแล้ว", leftLobby:"{n} ออกไปแล้ว",
     rulesTitle:"วิธีเล่น", close:"ปิด",
-    r1:"แต่ละคนได้ไพ่ 7 ใบจากทั้งหมด 28 ใบ (0-0 ถึง 6-6)",
+    r1:"ใช้ไพ่ 28 ใบ (0-0 ถึง 6-6) เล่น 2 คนได้คนละ 7 ใบ เล่น 3-4 คนได้คนละ 5 ใบ",
     r2:"วางไพ่ที่มีตัวเลขตรงกับปลายด้านใดด้านหนึ่ง",
     r3:"ถ้าไม่มีไพ่ลง ระบบจะจั่วให้อัตโนมัติจนกว่าจะได้ไพ่ที่ลงได้ ถ้ากองหมดให้ผ่าน",
-    r4:"ใครลงไพ่หมดก่อน ได้แต้มเท่ากับแต้มที่เหลือในมือคู่แข่ง",
-    r5:"ถ้าเกมตัน คนที่แต้มในมือน้อยกว่าชนะและได้แต้มของอีกฝ่าย",
+    r4:"ใครลงไพ่หมดก่อน ได้แต้มรวมที่เหลือในมือของทุกคน",
+    r5:"ถ้าเกมตัน คนที่แต้มในมือน้อยที่สุดชนะและได้แต้มของคนอื่นทั้งหมด",
     r6:"ใครถึง 100 แต้มก่อนชนะเกม"
   }
 };
@@ -446,14 +483,15 @@ function movesFor(hand, chain) {
   });
   return out;
 }
-function newGame() {
-  const s = { seq: 0, round: 0, target: 100, nextStarter: null, players: [{ score: 0, hand: [] }, { score: 0, hand: [] }] };
+const handSize = n => (n === 2 ? 7 : 5);
+function newGame(n) {
+  const s = { seq: 0, round: 0, target: 100, nextStarter: null, players: Array.from({ length: n }, () => ({ score: 0, hand: [] })) };
   startRound(s); return s;
 }
 function startRound(s) {
-  const deck = newDeck();
-  s.players.forEach(p => { p.hand = deck.splice(0, 7); });
-  s.bone = deck; s.chain = []; s.passes = 0; s.phase = "play"; s.result = null; s.round++; s.voids = [[], []];
+  const deck = newDeck(), n = s.players.length;
+  s.players.forEach(p => { p.hand = deck.splice(0, handSize(n)); });
+  s.bone = deck; s.chain = []; s.passes = 0; s.phase = "play"; s.result = null; s.round++; s.voids = s.players.map(() => []);
   if (s.nextStarter == null) {
     // first round: highest double leads, otherwise the heaviest tile
     let best = -1, who = 0;
@@ -464,15 +502,19 @@ function startRound(s) {
     s.turn = who;
   } else s.turn = s.nextStarter;
 }
+// Going out scores every other hand's pips. A blocked round goes to the single lowest hand; a tie scores nothing.
 function endRound(s, reason) {
-  const a = pips(s.players[0].hand), b = pips(s.players[1].hand);
-  let winner, points;
-  if (reason === "domino") { winner = s.players[0].hand.length === 0 ? 0 : 1; points = winner === 0 ? b : a; }
-  else if (a === b) { winner = null; points = 0; }
-  else { winner = a < b ? 0 : 1; points = winner === 0 ? b : a; }
+  const n = s.players.length, left = s.players.map(p => pips(p.hand));
+  let winner = null;
+  if (reason === "domino") winner = s.players.findIndex(p => !p.hand.length);
+  else {
+    const low = Math.min(...left), lows = left.reduce((a, v, i) => (v === low ? a.concat(i) : a), []);
+    if (lows.length === 1) winner = lows[0];
+  }
+  const points = winner == null ? 0 : left.reduce((a, v, i) => (i === winner ? a : a + v), 0);
   if (winner != null) s.players[winner].score += points;
-  s.result = { winner, points, reason, pips: [a, b] };
-  s.nextStarter = winner != null ? winner : 1 - s.turn;
+  s.result = { winner, points, reason, pips: left };
+  s.nextStarter = winner != null ? winner : (s.turn + 1) % n;
   s.phase = s.players.some(p => p.score >= s.target) ? "over" : "roundEnd";
 }
 function place(chain, tl, side) {
@@ -499,7 +541,7 @@ function applyAction(s, pi, a) {
     const idx = me.hand.findIndex(tl => key(tl) === a.tile), tl = me.hand[idx];
     place(s.chain, tl, a.side);
     me.hand.splice(idx, 1); s.passes = 0;
-    if (!me.hand.length) endRound(s, "domino"); else s.turn = 1 - pi;
+    if (!me.hand.length) endRound(s, "domino"); else s.turn = (pi + 1) % s.players.length;
     return true;
   }
   if (a.type === "draw") {
@@ -512,7 +554,7 @@ function applyAction(s, pi, a) {
     if (mv.length || s.bone.length) return false;
     noteVoid(s, pi);
     s.passes++;
-    if (s.passes >= 2) endRound(s, "blocked"); else s.turn = 1 - pi;
+    if (s.passes >= s.players.length) endRound(s, "blocked"); else s.turn = (pi + 1) % s.players.length;
     return true;
   }
   return false;
@@ -527,7 +569,7 @@ function validTile(x) { return Array.isArray(x) && x.length === 2 && x.every(n =
 function validView(v) {
   try {
     if (!v || !Number.isInteger(v.seq) || !Array.isArray(v.chain) || !v.chain.every(validTile)) return null;
-    if (!Array.isArray(v.players) || v.players.length !== 2) return null;
+    if (!Array.isArray(v.players) || v.players.length < 2 || v.players.length > 4 || !Number.isInteger(v.turn)) return null;
     if (!["play", "roundEnd", "over"].includes(v.phase)) return null;
     for (const p of v.players) { if (!Number.isInteger(p.score) || !Number.isInteger(p.count)) return null; if (p.hand !== null && !(Array.isArray(p.hand) && p.hand.every(validTile))) return null; }
     return v;
@@ -595,7 +637,7 @@ function renderSoundBtn() {
 
 /* ================= UI helpers ================= */
 const $ = s => document.querySelector(s);
-const screens = ["home", "profile", "online", "game"];
+const screens = ["home", "profile", "online", "wait", "game"];
 function show(id) { screens.forEach(s => { $("#" + s).hidden = s !== id; }); if (id === "game") requestAnimationFrame(render); }
 let toastTimer = null;
 function toast(msg) { const el = $("#toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600); }
@@ -609,10 +651,12 @@ function renderHome() {
   setAvatar($("#homeAvatar"), myName(), profile.small);
   $("#homeName").textContent = myName();
   document.querySelectorAll("#diffSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.diff === diff)));
+  document.querySelectorAll("#aiSeg button").forEach(b => { b.textContent = t("nPeople", { n: b.dataset.n }); b.setAttribute("aria-pressed", String(+b.dataset.n === aiCount)); });
 }
 $("#heroTiles").innerHTML = [[6,6,"-8deg",true],[5,3,"0deg",false],[1,4,"7deg",true]]
   .map(([a,b,r,v]) => tileSVG(a, b, v, v ? 30 : 64).replace('class="tile ', `style="--r:${r}" class="tile `)).join("");
 document.querySelectorAll("#diffSeg button").forEach(b => b.addEventListener("click", () => { diff = b.dataset.diff; store.set("domino.diff", diff); renderHome(); }));
+document.querySelectorAll("#aiSeg button").forEach(b => b.addEventListener("click", () => { aiCount = +b.dataset.n; store.set("domino.aiCount", aiCount); renderHome(); }));
 
 let draft = null;
 $("#editProfileBtn").addEventListener("click", () => {
@@ -759,16 +803,27 @@ $("#gameRulesBtn").addEventListener("click", showRules);
 $("#soundBtn").addEventListener("click", () => { muted = !muted; store.set("domino.muted", muted); renderSoundBtn(); });
 
 /* ================= game controller ================= */
-// G.mode: "ai" | "host" | "guest". Host and AI games own the full state; a guest only holds the host's view.
+// G.mode: "ai" | "host" | "guest". AI and host games own the full state; a guest only holds the host's view.
+// G.seats lists every player in turn order: { name, small, ai, level, cid }. G.me is this player's seat.
+const MAX_SEATS = 4;
 let G = null;
-let sel = null, lastChainLen = 0, lastMyCount = 0, lastPhase = null, lastFirst = null;
+let sel = null, lastChainLen = 0, lastPhase = null, lastFirst = null;
+let aiCount = [1, 2, 3].includes(store.get("domino.aiCount")) ? store.get("domino.aiCount") : 1;
 
+const meSeat = () => ({ name: myName(), small: profile.small, ai: false, cid: "host" });
+const aiSeat = (i, total) => ({ name: total > 1 ? t("computerN", { n: i }) : t("computer"), small: null, ai: true, level: diff, cid: null });
 function startAI() {
-  G = { mode: "ai", me: 0, opp: { name: t("computer"), small: null, ai: true }, state: newGame(), level: diff };
+  const seats = [meSeat()];
+  for (let i = 1; i <= aiCount; i++) seats.push(aiSeat(i, aiCount));
+  G = { mode: "ai", me: 0, seats, state: newGame(seats.length) };
   resetMarks(); show("game"); afterChange();
 }
-function resetMarks() { if (G) { stopDraw(); G.seen = null; } sel = null; lastChainLen = 0; lastMyCount = 0; lastPhase = null; lastFirst = null; closeSheet(); $("#endpick").hidden = true; }
-function currentView() { return G.mode === "guest" ? G.view : viewFor(G.state, G.me); }
+function resetMarks() { if (G) { stopDraw(); G.seen = null; } sel = null; lastChainLen = 0; lastPhase = null; lastFirst = null; closeSheet(); $("#endpick").hidden = true; }
+function currentView() {
+  if (!G) return null;
+  if (G.mode === "guest") return G.me >= 0 ? G.view : null;
+  return G.state ? viewFor(G.state, G.me) : null;
+}
 function act(a) {
   if (!G) return;
   if (G.mode === "guest") { guestAct(a); return; }
@@ -793,7 +848,7 @@ function predict(a) {
   const mine = nv.players[G.me];
   mine.hand = hand.filter((_, i) => i !== idx); mine.count = mine.hand.length;
   place(nv.chain, hand[idx], a.side);
-  if (mine.hand.length) nv.turn = 1 - G.me; // on the last tile the host announces the result
+  if (mine.hand.length) nv.turn = (G.me + 1) % nv.players.length; // on the last tile the host announces the result
   G.view = nv; render();
 }
 function clearPend() { if (G && G.pend) { clearInterval(G.pend.timer); G.pend = null; } }
@@ -806,54 +861,56 @@ function doAction(pi, a) {
 function afterChange() {
   render();
   if (G.mode === "host") sendState();
-  if (G.mode === "ai") {
+  if (G.mode !== "guest" && G.state) {
     clearTimeout(G.aiTimer);
     const s = G.state;
-    if (s.phase === "play" && s.turn === 1) {
-      const canMove = movesFor(s.players[1].hand, s.chain).length > 0;
+    if (s.phase === "play" && G.seats[s.turn] && G.seats[s.turn].ai) {
+      const canMove = movesFor(s.players[s.turn].hand, s.chain).length > 0;
       G.aiTimer = setTimeout(aiStep, (canMove ? 850 : 480) + drawPending());
     }
   }
 }
 function aiStep() {
-  if (!G || G.mode !== "ai") return;
-  const s = G.state; if (s.phase !== "play" || s.turn !== 1) return;
-  const m = aiChoose(s.players[1].hand, s.chain, G.level, { oppVoid: (s.voids && s.voids[0]) || [], oppCount: s.players[0].hand.length });
-  if (m) doAction(1, { type: "play", tile: m.tile, side: m.side });
-  else if (s.bone.length) doAction(1, { type: "draw" });
-  else doAction(1, { type: "pass" });
+  if (!G || G.mode === "guest" || !G.state) return;
+  const s = G.state, pi = s.turn, seat = G.seats[pi];
+  if (s.phase !== "play" || !seat || !seat.ai) return;
+  const next = (pi + 1) % s.players.length;
+  const others = s.players.filter((_, i) => i !== pi).map(p => p.hand.length);
+  const m = aiChoose(s.players[pi].hand, s.chain, seat.level || diff, { oppVoid: (s.voids && s.voids[next]) || [], oppCount: Math.min(...others) });
+  if (m) doAction(pi, { type: "play", tile: m.tile, side: m.side });
+  else if (s.bone.length) doAction(pi, { type: "draw" });
+  else doAction(pi, { type: "pass" });
 }
-function names() { const n = []; n[G.me] = myName(); n[1 - G.me] = G.opp ? G.opp.name : "…"; return n; }
+const nameOf = i => (i === G.me ? myName() : (G.seats[i] && G.seats[i].name) || "…");
+const photoOf = i => (i === G.me ? profile.small : G.seats[i] && G.seats[i].small);
+const isAI = i => i !== G.me && !!(G.seats[i] && G.seats[i].ai);
 
 /* ================= rendering ================= */
+function scoreEl(n) { const f = el("span", "score"); f.appendChild(el("b", null, String(n))); f.appendChild(document.createTextNode("/100")); return f; }
 function render() {
   if (!G || $("#game").hidden) return;
   const v = currentView(); if (!v) return;
-  const me = G.me, op = 1 - me, nm = names();
+  const me = G.me, n = v.players.length;
   const myTurn = v.phase === "play" && v.turn === me;
   const myHand = v.players[me].hand || [];
   const mv = myTurn ? movesFor(myHand, v.chain) : [];
-  trackDraws(v, me, op);
-  const myPend = G.drawQ ? G.drawQ.mine.length : 0, opPend = G.drawQ ? G.drawQ.opp : 0;
+  trackDraws(v, me);
+  const myPend = G.drawQ ? G.drawQ.mine.length : 0, oppPend = G.drawQ ? G.drawQ.opp : [];
+  const pendAll = myPend + oppPend.reduce((a, x) => a + (x || 0), 0);
 
   renderRound(v);
-  setAvatar($("#oppAvatar"), nm[op], G.opp && G.opp.small, G.opp && G.opp.ai);
-  setAvatar($("#meAvatar"), nm[me], profile.small);
-  $("#oppName").textContent = nm[op]; $("#meName").textContent = nm[me];
-  const sc = (n) => { const f = document.createDocumentFragment(); f.appendChild(el("b", null, String(n))); f.appendChild(document.createTextNode("/100")); return f; };
-  $("#oppScore").replaceChildren(sc(v.players[op].score)); $("#meScore").replaceChildren(sc(v.players[me].score));
-  $("#oppCount").textContent = v.players[op].count - opPend; $("#meCount").textContent = v.players[me].count - myPend;
-  $("#oppBacks").innerHTML = "<i></i>".repeat(Math.min(v.players[op].count - opPend, 14));
-  $("#oppBar").classList.toggle("active", v.phase === "play" && v.turn === op);
+  renderOpps(v, oppPend);
+  setAvatar($("#meAvatar"), myName(), profile.small);
+  $("#meName").textContent = myName();
+  $("#meScore").replaceChildren(...scoreEl(v.players[me].score).childNodes);
+  $("#meCount").textContent = v.players[me].count - myPend;
   $("#meBar").classList.toggle("active", myTurn);
-  $("#pileCount").textContent = v.bone + myPend + opPend;
+  $("#pileCount").textContent = v.bone + pendAll;
   $("#pile").classList.toggle("call", myTurn && !mv.length && v.bone > 0);
-  $("#pile").style.opacity = v.bone ? 1 : .35;
+  $("#pile").style.opacity = v.bone + pendAll ? 1 : .35;
 
-  // sounds from observed changes
   if (v.chain.length > lastChainLen) sfx("clack"); // draws make their own sound, one per tile
 
-  // status line
   const st = $("#status"); st.textContent = "";
   if (v.phase === "play") {
     if (myTurn) {
@@ -862,7 +919,7 @@ function render() {
       else if (mv.length) st.textContent = t("yourTurn");
       else if (v.bone > 0) { st.textContent = t("mustDraw"); autoDraw(); }
       else { st.appendChild(el("span", null, t("mustPass"))); st.appendChild(button("primary pass", t("pass"), () => act({ type: "pass" }))); }
-    } else st.textContent = t("oppTurn", { n: nm[op] });
+    } else st.textContent = t("oppTurn", { n: nameOf(v.turn) });
   }
   if (sel && (!myTurn || !myHand.some(tl => key(tl) === sel))) sel = null;
 
@@ -872,7 +929,25 @@ function render() {
   if (v.phase !== "play" && lastPhase === "play") { showResult(v); if (v.result && v.result.winner === me) sfx("win"); }
   else if (v.phase === "play" && lastPhase && lastPhase !== "play") closeSheet();
   else if (v.phase !== "play" && $("#overlay").hidden) showResult(v);
-  lastChainLen = v.chain.length; lastMyCount = v.players[me].count; lastPhase = v.phase;
+  lastChainLen = v.chain.length; lastPhase = v.phase;
+}
+// Opponents in turn order after me. One opponent gets the full bar; two or three share the row.
+function renderOpps(v, pend) {
+  const box = $("#opps"), n = v.players.length, multi = n > 2;
+  box.textContent = "";
+  box.style.gridTemplateColumns = `repeat(${n - 1}, minmax(0, 1fr))`;
+  for (let k = 1; k < n; k++) {
+    const i = (G.me + k) % n, left = v.players[i].count - (pend[i] || 0);
+    const card = el("div", "pbar" + (multi ? " mini" : "") + (v.phase === "play" && v.turn === i ? " active" : ""));
+    const av = el("div", "avatar"); setAvatar(av, nameOf(i), photoOf(i), isAI(i));
+    const who = el("div", "who"); who.appendChild(el("span", "name", nameOf(i))); who.appendChild(scoreEl(v.players[i].score));
+    card.append(av, who);
+    if (!multi) { const b = el("div", "backs"); b.innerHTML = "<i></i>".repeat(Math.max(0, Math.min(left, 14))); card.appendChild(b); }
+    const cnt = el("div", "count" + (G.bump === i ? " bump" : ""), String(left));
+    card.appendChild(cnt);
+    box.appendChild(card);
+  }
+  G.bump = null;
 }
 // No playable tile on my turn: draw without waiting for a tap (pause briefly so the player sees why).
 function autoDraw() {
@@ -964,29 +1039,30 @@ function renderHand(hand, myTurn, mv, hidden) {
 // Drawing several tiles at once happens in one step of the game, but showing 7 tiles appear at once is
 // confusing. Hand them over one by one from the pile instead (purely visual; the state is already final).
 const DRAW_STEP = 240;
-function trackDraws(v, me, op) {
-  const keys = (v.players[me].hand || []).map(key), prev = G.seen;
-  if (prev && prev.round === v.round && prev.phase === "play" && v.phase === "play" && prev.chain === v.chain.length) {
-    const fresh = keys.filter(k => !prev.keys.has(k)), oppUp = v.players[op].count - prev.opp;
-    if (fresh.length || oppUp > 0) queueDraw(fresh, Math.max(0, oppUp));
+function trackDraws(v, me) {
+  const keys = (v.players[me].hand || []).map(key), counts = v.players.map(p => p.count), prev = G.seen;
+  if (prev && prev.round === v.round && prev.phase === "play" && v.phase === "play" && prev.chain === v.chain.length && prev.counts.length === counts.length) {
+    const fresh = keys.filter(k => !prev.keys.has(k));
+    const up = counts.map((c, i) => (i === me ? 0 : Math.max(0, c - prev.counts[i])));
+    if (fresh.length || up.some(x => x)) queueDraw(fresh, up);
   } else if (prev && prev.round !== v.round) stopDraw();
-  G.seen = { round: v.round, phase: v.phase, chain: v.chain.length, keys: new Set(keys), opp: v.players[op].count };
+  G.seen = { round: v.round, phase: v.phase, chain: v.chain.length, keys: new Set(keys), counts };
 }
-function queueDraw(mine, opp) {
-  const q = G.drawQ = G.drawQ || { mine: [], opp: 0, timer: null };
-  q.mine.push(...mine); q.opp += opp;
+function queueDraw(mine, up) {
+  const q = G.drawQ = G.drawQ || { mine: [], opp: [], timer: null };
+  q.mine.push(...mine); up.forEach((x, i) => { q.opp[i] = (q.opp[i] || 0) + x; });
   if (!q.timer) q.timer = setInterval(stepDraw, DRAW_STEP);
 }
 function stepDraw() {
   const q = G && G.drawQ; if (!q) return;
   if (q.mine.length) G.fly = q.mine.shift();
-  else if (q.opp > 0) { q.opp--; const c = $("#oppCount"); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+  else { const i = q.opp.findIndex(x => x > 0); if (i >= 0) { q.opp[i]--; G.bump = i; } }
   sfx("draw");
-  if (!q.mine.length && !q.opp) stopDraw();
+  if (!q.mine.length && !q.opp.some(x => x > 0)) stopDraw();
   render();
 }
 function stopDraw() { if (G && G.drawQ) { clearInterval(G.drawQ.timer); G.drawQ = null; } }
-const drawPending = () => (G && G.drawQ ? (G.drawQ.mine.length + G.drawQ.opp) * DRAW_STEP : 0);
+const drawPending = () => (G && G.drawQ ? (G.drawQ.mine.length + G.drawQ.opp.reduce((a, x) => a + (x || 0), 0)) * DRAW_STEP : 0);
 function onTileTap(k, btn) {
   const v = currentView(); if (!v || v.phase !== "play") return;
   const shake = () => { btn.classList.remove("shake"); void btn.offsetWidth; btn.classList.add("shake"); };
@@ -1005,34 +1081,38 @@ $("#pile").addEventListener("click", () => {
   if (!movesFor(v.players[G.me].hand, v.chain).length && v.bone > 0) act({ type: "draw" });
 });
 function showResult(v) {
-  const me = G.me, op = 1 - me, nm = names(), r = v.result; if (!r) return;
+  const me = G.me, n = v.players.length, r = v.result; if (!r) return;
   openSheet(sh => {
     const over = v.phase === "over";
     let title;
-    if (over) title = v.players[me].score >= v.players[op].score ? t("youWinGame") : t("oppWinGame", { n: nm[op] });
-    else title = r.winner == null ? t("tieRound") : r.winner === me ? t("youWinRound") : t("oppWinRound", { n: nm[op] });
+    if (over) {
+      let w = 0; v.players.forEach((p, i) => { if (p.score > v.players[w].score) w = i; });
+      if (v.players[me].score === v.players[w].score) w = me;
+      title = w === me ? t("youWinGame") : t("oppWinGame", { n: nameOf(w) });
+    } else title = r.winner == null ? t("tieRound") : r.winner === me ? t("youWinRound") : t("oppWinRound", { n: nameOf(r.winner) });
     sh.appendChild(el("h2", null, title));
     if (r.winner != null) sh.appendChild(el("p", "sub", t("gotPoints", { p: r.points })));
     if (r.reason === "blocked") sh.appendChild(el("p", "note", t("blocked")));
     const tally = el("div", "tally");
-    [me, op].forEach(i => {
-      const av = el("div", "avatar"); setAvatar(av, nm[i], i === me ? profile.small : G.opp && G.opp.small, i !== me && G.opp && G.opp.ai);
+    for (let k = 0; k < n; k++) {
+      const i = (me + k) % n;
+      const av = el("div", "avatar"); setAvatar(av, nameOf(i), photoOf(i), isAI(i));
       tally.appendChild(av);
-      const n = el("div", "n", nm[i]); tally.appendChild(n);
+      tally.appendChild(el("div", "n", nameOf(i)));
       const s = el("div", "s"); s.appendChild(el("b", null, String(v.players[i].score))); s.appendChild(document.createTextNode("/100")); tally.appendChild(s);
       const hand = v.players[i].hand || [];
       if (hand.length) {
         const rv = el("div", "reveal"); rv.innerHTML = hand.map(tl => tileSVG(tl[0], tl[1], true, 18)).join("");
         rv.appendChild(el("span", "note", " " + t("pipsLeft", { p: pips(hand) }))); tally.appendChild(rv);
       }
-    });
+    }
     sh.appendChild(tally);
     if (over) { sh.appendChild(button("primary", t("playAgain"), () => act({ type: "again" }))); sh.appendChild(button("ghost", t("menu"), leaveGame)); }
     else sh.appendChild(button("primary", t("nextRound"), () => act({ type: "next" })));
   });
 }
 function leaveGame() {
-  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearTimeout(G.autoT); clearPend(); stopDraw(); if (G.net) G.net.close(); }
+  if (G) { clearTimeout(G.aiTimer); clearInterval(G.tick); clearInterval(G.pingT); clearTimeout(G.autoT); clearTimeout(G.gaveUp); clearPend(); stopDraw(); if (G.net) G.net.close(); }
   G = null; closeSheet(); renderHome(); show("home");
 }
 $("#leaveBtn").addEventListener("click", () => {
@@ -1043,12 +1123,61 @@ $("#leaveBtn").addEventListener("click", () => {
 });
 window.addEventListener("resize", () => render());
 
+/* ================= waiting room ================= */
+function renderWait() {
+  if (!G || $("#wait").hidden) return;
+  const host = G.mode === "host";
+  $("#codeOut").textContent = G.code || "-----";
+  const list = $("#seatList"); list.textContent = "";
+  for (let i = 0; i < MAX_SEATS; i++) {
+    const s = G.seats[i], row = el("div", "seat" + (s ? "" : " empty"));
+    if (s) {
+      const av = el("div", "avatar"); setAvatar(av, nameOf(i), photoOf(i), isAI(i)); row.appendChild(av);
+      row.appendChild(el("span", "sname", nameOf(i)));
+      if (i === 0) row.appendChild(el("span", "tag", t("hostTag")));
+      if (s.ai) {
+        row.appendChild(el("span", "tag", t("computer")));
+        if (host) row.appendChild(button("ghost", t("remove"), () => { G.seats.splice(i, 1); renameAIs(); lobbyChanged(); }));
+      }
+    } else row.appendChild(el("span", "sname", t("emptySeat")));
+    list.appendChild(row);
+  }
+  $("#playersCount").textContent = t("players", { a: G.seats.length });
+  $("#hostCtrls").hidden = !host;
+  $("#startHint").hidden = !host || G.seats.length >= 2;
+  $("#guestNote").hidden = host;
+  $("#keepOpenNote").hidden = !host;
+  $("#addAiBtn").disabled = G.seats.length >= MAX_SEATS;
+  $("#startBtn").disabled = G.seats.length < 2;
+  $("#copyLinkBtn").hidden = IN_ARTIFACT;
+}
+function renameAIs() {
+  const ais = G.seats.filter(s => s.ai);
+  ais.forEach((s, k) => { s.name = ais.length > 1 ? t("computerN", { n: k + 1 }) : t("computer"); });
+}
+$("#addAiBtn").addEventListener("click", () => {
+  if (!G || G.mode !== "host" || G.state || G.seats.length >= MAX_SEATS) return;
+  G.seats.push(aiSeat(1, 1)); renameAIs(); lobbyChanged();
+});
+$("#startBtn").addEventListener("click", () => {
+  if (!G || G.mode !== "host" || G.state || G.seats.length < 2) return;
+  G.state = newGame(G.seats.length);
+  lobbyPresence();
+  G.net.broadcast(rosterMsg());
+  resetMarks(); show("game"); afterChange();
+});
+$("#waitBack").addEventListener("click", leaveGame);
+
 /* ================= networking =================
    Inside a claude.ai artifact: the platform's "room" capability (WebRTC is blocked there).
-   Anywhere else (a normal website): PeerJS over WebRTC with its free public broker. */
+   Anywhere else (a normal website): PeerJS over WebRTC with its free public broker.
+   The host owns the game. Each guest picks a random id (cid) and the host addresses messages with
+   `to: cid`, so the same messages work over a shared room as over direct connections. */
 const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+const makeCid = () => Math.random().toString(36).slice(2, 12);
+const hostCodes = new Set();
 let roomP = null;
 const getRoom = () => (roomP = roomP || (IN_ARTIFACT ? window.claude.use("room") : Promise.resolve(null)));
 let peerLib = null;
@@ -1060,47 +1189,56 @@ function loadPeerJS() {
   });
 }
 const PEER_PREFIX = "dmn-qm73-";
+// Host link: onmsg(key, data) and onleave(key) per guest connection; sendTo(key, data), broadcast(data).
 async function openHost(code) {
   if (IN_ARTIFACT) {
     const room = await getRoom(); if (!room) throw new Error("unavailable");
     const r = await room.join("dmn-" + code.toLowerCase());
-    room.presence({ table: code, host: myName() }).catch(() => {});
-    const net = { send(d) { r.emit("g", d).catch(() => {}); }, close() { r.leave().catch(() => {}); room.presence({ table: null, host: null }).catch(() => {}); }, peerId: null };
-    r.on("g", m => {
-      if (m.sameTab || !m.data) return;
-      if (!net.peerId) { if (m.data.t !== "hello") return; net.peerId = m.peer; room.presence({ table: null, host: null }).catch(() => {}); }
-      if (m.peer === net.peerId) net.onmsg && net.onmsg(m.data);
-    });
-    r.onPeers(ch => { if (net.peerId && ch.left.some(p => p.peer === net.peerId)) net.onclose && net.onclose(); });
+    const net = {
+      sendTo(k, d) { r.emit("g", d).catch(() => {}); },
+      broadcast(d) { r.emit("g", d).catch(() => {}); },
+      drop() {},
+      presence(p) { room.presence(p ? { table: p.table, host: p.host, n: p.n } : { table: null, host: null, n: null }).catch(() => {}); },
+      close() { r.leave().catch(() => {}); net.presence(null); }
+    };
+    r.on("g", m => { if (!m.sameTab && m.data) net.onmsg && net.onmsg(m.peer, m.data); });
+    r.onPeers(ch => ch.left.forEach(p => net.onleave && net.onleave(p.peer)));
     return net;
   }
   await loadPeerJS();
   return new Promise((res, rej) => {
-    const peer = new window.Peer(PEER_PREFIX + code);
-    const net = { conn: null, send(d) { if (net.conn && net.conn.open) net.conn.send(d); }, close() { try { peer.destroy(); } catch (e) {} }, pc: () => net.conn && net.conn.peerConnection };
+    const peer = new window.Peer(PEER_PREFIX + code), conns = new Map();
+    const net = {
+      sendTo(k, d) { const c = conns.get(k); if (c && c.open) c.send(d); },
+      broadcast(d) { conns.forEach(c => { if (c.open) c.send(d); }); },
+      drop(k) { const c = conns.get(k); setTimeout(() => { try { c && c.close(); } catch (e) {} }, 1500); },
+      close() { try { peer.destroy(); } catch (e) {} },
+      pc: () => { for (const c of conns.values()) if (c.peerConnection) return c.peerConnection; return null; }
+    };
     let ready = false;
     keepAlive(peer);
     peer.on("open", () => { ready = true; res(net); });
     peer.on("error", e => { if (!ready) rej(e); });
     peer.on("connection", c => {
-      if (net.conn) { c.on("open", () => c.close()); return; }
-      net.conn = c;
-      c.on("data", d => net.onmsg && net.onmsg(d));
-      c.on("close", () => net.onclose && net.onclose());
+      conns.set(c.peer, c);
+      c.on("data", d => net.onmsg && net.onmsg(c.peer, d));
+      c.on("close", () => { if (conns.get(c.peer) === c) { conns.delete(c.peer); net.onleave && net.onleave(c.peer); } });
+      c.on("error", () => {});
     });
   });
 }
-async function openGuest(code) {
+// Guest link: talks only to the host; ignores whatever other guests send into a shared room.
+async function openGuest(code, cid) {
   if (IN_ARTIFACT) {
     const room = await getRoom(); if (!room) throw new Error("unavailable");
     const r = await room.join("dmn-" + code.toLowerCase());
-    const net = { send(d) { r.emit("g", d).catch(() => {}); }, close() { r.leave().catch(() => {}); }, peerId: null };
+    const net = { send(d) { r.emit("g", d).catch(() => {}); }, close() { r.leave().catch(() => {}); }, hostPeer: null };
     r.on("g", m => {
       if (m.sameTab || !m.data) return;
-      if (!net.peerId) { if (m.data.t !== "welcome") return; net.peerId = m.peer; }
-      if (m.peer === net.peerId) net.onmsg && net.onmsg(m.data);
+      if (!net.hostPeer) { if ((m.data.t !== "welcome" && m.data.t !== "full") || m.data.to !== cid) return; net.hostPeer = m.peer; }
+      if (m.peer === net.hostPeer) net.onmsg && net.onmsg(m.data);
     });
-    r.onPeers(ch => { if (net.peerId && ch.left.some(p => p.peer === net.peerId)) net.onclose && net.onclose(); });
+    r.onPeers(ch => { if (net.hostPeer && ch.left.some(p => p.peer === net.hostPeer)) net.onclose && net.onclose(); });
     return net;
   }
   await loadPeerJS();
@@ -1131,9 +1269,8 @@ function netError(e) {
   const why = e && (e.type || e.message);
   return t("connFail") + (why ? " (" + String(why).slice(0, 40) + ")" : "");
 }
-const myCard = () => ({ name: myName(), small: profile.small });
 
-let pending = null; // host waiting for a guest
+/* ---- host ---- */
 async function createTable() {
   const msg = $("#onlineMsg"); msg.textContent = "";
   $("#createBtn").disabled = true;
@@ -1144,47 +1281,91 @@ async function createTable() {
       catch (e) { if (e && e.type === "unavailable-id") { code = makeCode(); continue; } throw e; }
     }
     if (!net) throw new Error("fail");
-    pending = net;
-    $("#codeOut").textContent = code; $("#hostIdle").hidden = true; $("#hostWait").hidden = false;
-    $("#copyLinkBtn").hidden = IN_ARTIFACT;
-    net.code = code;
-    net.onmsg = d => {
-      if (!d || d.t !== "hello") return;
-      pending = null;
-      G = { mode: "host", me: 0, opp: cleanProfile(d.p), state: newGame(), net };
-      wireHost(net); resetMarks(); show("game"); sendWelcome(); afterChange();
-      G.tick = setInterval(sendState, 4000); startPing();
-    };
-    net.onclose = () => { net.conn = null; net.peerId = null; };
+    hostCodes.add(code);
+    G = { mode: "host", me: 0, code, seats: [meSeat()], clients: new Map(), state: null, net };
+    net.onmsg = hostMsg; net.onleave = hostLeave;
+    show("wait"); renderWait(); lobbyPresence();
+    G.tick = setInterval(() => {
+      if (!G) return;
+      if (G.state) sendState(); else { G.net.broadcast(rosterMsg()); lobbyPresence(); }
+      // a phone that went quiet (closed, lost signal) never says goodbye: let the computer take over
+      G.clients.forEach((c, k) => { if (Date.now() - c.last > SILENT_MS) { G.net.drop(k); hostLeave(k); } });
+    }, 4000);
+    startPing();
   } catch (e) {
     msg.textContent = netError(e);
   } finally { $("#createBtn").disabled = false; }
 }
-function wireHost(net) {
-  net.onmsg = d => {
-    if (!G || !d || typeof d !== "object") return;
-    if (d.t === "hello") { G.opp = cleanProfile(d.p); sendWelcome(); render(); }
-    else if (d.t === "act") {
-      if (Number.isInteger(d.id)) { if (d.id <= (G.ack || 0)) { sendState(); return; } G.ack = d.id; }
-      if (!doAction(1, d.a)) sendState();
+function lobbyPresence() { if (G && G.net && G.net.presence) G.net.presence(G.state ? null : { table: G.code, host: myName(), n: G.seats.length }); }
+function rosterMsg() { return { t: "roster", started: !!G.state, seats: G.seats.map((s, i) => ({ name: i === 0 ? myName() : s.name, ai: !!s.ai, cid: s.cid || null })) }; }
+function lobbyChanged() { G.net.broadcast(rosterMsg()); lobbyPresence(); renderWait(); }
+function seatOf(c) { return G.seats.findIndex(s => !s.ai && s.cid === c.cid); }
+const SILENT_MS = 25000;
+function hostMsg(k, d) {
+  if (!G || G.mode !== "host" || !d || typeof d !== "object") return;
+  let c = G.clients.get(k);
+  if (c) c.last = Date.now();
+  if (d.t === "hello") {
+    const cid = typeof d.cid === "string" ? d.cid.slice(0, 24) : null; if (!cid) return;
+    const back = !c && G.state ? G.seats.findIndex(s => s.ai && s.wasCid === cid) : -1;
+    if (back >= 0) {
+      // a player the computer stood in for is back: hand their seat over again
+      c = { cid, ack: 0, last: Date.now() }; G.clients.set(k, c);
+      Object.assign(G.seats[back], { ai: false, cid, wasCid: null });
+      toast(t("joined", { n: G.seats[back].name }));
+      G.net.broadcast(rosterMsg()); afterChange();
+    } else if (!c) {
+      if (G.state || G.seats.length >= MAX_SEATS) { G.net.sendTo(k, { t: "full", to: cid }); G.net.drop(k); return; }
+      const p = cleanProfile(d.p);
+      c = { cid, ack: 0, last: Date.now() }; G.clients.set(k, c);
+      G.seats.push({ name: p.name, small: p.small, ai: false, cid });
+      if (p.small) G.net.broadcast({ t: "prof", cid, small: p.small });
+      toast(t("joined", { n: p.name })); sfx("draw");
+      lobbyChanged();
     }
-    else if (netPing(d)) return;
-    else if (d.t === "sync") sendState();
-  };
-  net.onclose = opponentGone;
+    // (re)introduce the table to this guest
+    G.net.sendTo(k, { t: "welcome", to: cid, code: G.code });
+    G.net.sendTo(k, rosterMsg());
+    if (profile.small) G.net.sendTo(k, { t: "prof", cid: "host", small: profile.small });
+    G.seats.forEach(s => { if (!s.ai && s.cid !== cid && s.cid !== "host" && s.small) G.net.sendTo(k, { t: "prof", cid: s.cid, small: s.small }); });
+    if (G.state) sendStateTo(k, c);
+    return;
+  }
+  if (!c) return;
+  if (netPing(d, x => G.net.sendTo(k, Object.assign(x, { to: c.cid })))) return;
+  if (d.t === "act" && G.state) {
+    const seat = seatOf(c); if (seat < 0) return;
+    if (Number.isInteger(d.id)) { if (d.id <= c.ack) { sendStateTo(k, c); return; } c.ack = d.id; }
+    if (!doAction(seat, d.a)) sendStateTo(k, c);
+  } else if (d.t === "sync") sendStateTo(k, c);
 }
-function sendWelcome() { if (G && G.net) { G.net.send({ t: "welcome", p: myCard() }); sendState(); } }
-function sendState() { if (G && G.mode === "host" && G.net) G.net.send({ t: "state", s: viewFor(G.state, 1), ack: G.ack || 0 }); }
+// A guest who leaves before the start frees the seat; during a game the computer takes over that hand.
+function hostLeave(k) {
+  const c = G && G.mode === "host" && G.clients.get(k); if (!c) return;
+  G.clients.delete(k);
+  const i = seatOf(c); if (i < 0) return;
+  const name = G.seats[i].name;
+  if (!G.state) { G.seats.splice(i, 1); toast(t("leftLobby", { n: name })); lobbyChanged(); return; }
+  G.seats[i] = Object.assign({}, G.seats[i], { ai: true, level: diff, cid: null, wasCid: c.cid });
+  toast(t("replacedByAI", { n: name }));
+  G.net.broadcast(rosterMsg()); afterChange();
+}
+function sendStateTo(k, c) {
+  const seat = seatOf(c); if (seat < 0 || !G.state) return;
+  G.net.sendTo(k, { t: "state", to: c.cid, s: viewFor(G.state, seat), ack: c.ack || 0 });
+}
+function sendState() { if (G && G.mode === "host" && G.state) G.clients.forEach((c, k) => sendStateTo(k, c)); }
 // Round-trip time and whether the link goes through a relay server, shown next to the round number.
-function netPing(d) {
-  if (d.t === "ping") { G.net.send({ t: "pong", n: d.n }); return true; }
+function netPing(d, reply) {
+  if (d.t === "ping") { reply({ t: "pong", n: d.n }); return true; }
   if (d.t === "pong") { if (typeof d.n === "number") { G.rtt = Math.max(0, Date.now() - d.n); renderRound(); } return true; }
   return false;
 }
 function startPing() {
   G.pingT = setInterval(() => {
     if (!G || !G.net) return;
-    G.net.send({ t: "ping", n: Date.now() });
+    if (G.mode === "host") { if (G.clients.size) G.net.broadcast({ t: "ping", n: Date.now() }); }
+    else G.net.send({ t: "ping", n: Date.now() });
     const pc = G.net.pc && G.net.pc();
     if (pc) isRelay(pc).then(r => { if (G && r != null) { G.relay = r; renderRound(); } });
   }, 3000);
@@ -1199,49 +1380,82 @@ async function isRelay(pc) {
     return !!((lc && lc.candidateType === "relay") || (rc && rc.candidateType === "relay"));
   } catch (e) { return null; }
 }
-function opponentGone() { if (!G) return; const wasGame = !$("#game").hidden; leaveGame(); if (wasGame) toast(t("oppLeft")); }
-function cancelHost() {
-  if (pending) { pending.close(); pending = null; }
-  $("#hostIdle").hidden = false; $("#hostWait").hidden = true;
-}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || !G) return;
+  if (G.mode === "host" && G.clients) G.clients.forEach(c => { c.last = Date.now(); });
+  if (G.mode === "guest") G.lastHost = Date.now();
+});
+
+/* ---- guest ---- */
+function hostGone() { if (!G) return; leaveGame(); toast(t("hostLeft")); }
 async function joinTable(code) {
   code = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   const msg = $("#onlineMsg");
   if (code.length !== 5) { msg.textContent = t("badCode"); return; }
-  if (pending && pending.code === code) { msg.textContent = t("selfJoin"); return; }
-  cancelHost();
+  if (hostCodes.has(code)) { msg.textContent = t("selfJoin"); return; }
   msg.textContent = t("connecting"); $("#joinBtn").disabled = true;
   try {
-    const net = await openGuest(code);
-    G = { mode: "guest", me: 1, opp: null, view: null, net };
-    let greeted = false, gaveUp = null;
-    const hello = () => net.send({ t: "hello", p: myCard() });
+    const cid = makeCid(), net = await openGuest(code, cid);
+    G = { mode: "guest", me: -1, cid, code, seats: [], profs: {}, view: null, net, greeted: false };
+    const hello = () => net.send({ t: "hello", cid, p: { name: myName(), small: profile.small } });
     hello();
-    G.tick = setInterval(() => { if (!greeted) hello(); }, 2000); startPing();
-    gaveUp = setTimeout(() => { if (!greeted && G && G.net === net) { leaveGame(); show("online"); msg.textContent = t("connFail"); } }, 15000);
-    net.onmsg = d => {
-      if (!G || !d || typeof d !== "object") return;
-      if (d.t === "welcome") {
-        G.opp = cleanProfile(d.p);
-        if (!greeted) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; }
-        render();
-      } else if (netPing(d)) {
-        return;
-      } else if (d.t === "state") {
-        const v = validView(d.s); if (!v) return;
-        // the host hasn't seen our latest move yet: keep showing it instead of jumping back
-        if (G.pend && Number.isInteger(d.ack) && d.ack < G.pend.id) return;
-        clearPend();
-        if (G.view && v.seq < G.view.seq) return;
-        const first = !G.view; G.view = v;
-        if (first) { greeted = true; clearTimeout(gaveUp); msg.textContent = ""; resetMarks(); show("game"); }
-        render();
-      }
-    };
-    net.onclose = opponentGone;
+    G.lastHost = Date.now();
+    G.tick = setInterval(() => {
+      if (!G) return;
+      if (!G.greeted) hello();
+      else if (Date.now() - G.lastHost > SILENT_MS) hostGone();
+    }, 2000);
+    startPing();
+    G.gaveUp = setTimeout(() => { if (G && G.net === net && !G.greeted) { leaveGame(); show("online"); msg.textContent = t("connFail"); } }, 15000);
+    net.onmsg = d => guestMsg(d, msg);
+    net.onclose = hostGone;
   } catch (e) {
     msg.textContent = netError(e);
   } finally { $("#joinBtn").disabled = false; }
+}
+function guestMsg(d, msg) {
+  if (!G || G.mode !== "guest" || !d || typeof d !== "object") return;
+  if (d.to && d.to !== G.cid) return;
+  G.lastHost = Date.now();
+  if (netPing(d, x => G.net.send(x))) return;
+  if (d.t === "full") { leaveGame(); show("online"); msg.textContent = t("tableFull"); return; }
+  if (d.t === "welcome") {
+    if (!G.greeted) { G.greeted = true; clearTimeout(G.gaveUp); msg.textContent = ""; }
+    if (typeof d.code === "string") G.code = d.code.slice(0, 5);
+    if (!G.view) { show("wait"); renderWait(); }
+    return;
+  }
+  if (d.t === "prof" && typeof d.cid === "string") {
+    G.profs[d.cid] = cleanProfile({ name: "-", small: d.small }).small;
+    G.seats.forEach(s => { if (s.cid === d.cid) s.small = G.profs[d.cid]; });
+    renderWait(); render(); return;
+  }
+  if (d.t === "roster" && Array.isArray(d.seats) && d.seats.length <= MAX_SEATS) {
+    const old = G.seats;
+    G.seats = d.seats.map(x => {
+      const p = cleanProfile(x), cid = x && typeof x.cid === "string" ? x.cid.slice(0, 24) : null;
+      return { name: p.name, ai: !!(x && x.ai), cid, small: cid ? G.profs[cid] || null : null };
+    });
+    G.seats.forEach((s, i) => { if (s.ai && old[i] && !old[i].ai && old.length === G.seats.length && i !== G.me) toast(t("replacedByAI", { n: old[i].name })); });
+    const mine = G.seats.findIndex(s => s.cid === G.cid);
+    if (mine < 0 && G.view) G.net.send({ t: "hello", cid: G.cid, p: { name: myName(), small: profile.small } }); // the computer took my seat: ask for it back
+    else G.me = mine;
+    if (!G.greeted && G.me >= 0) { G.greeted = true; clearTimeout(G.gaveUp); msg.textContent = ""; }
+    if (!G.view && G.me >= 0 && $("#wait").hidden && !d.started) { show("wait"); }
+    renderWait(); render(); return;
+  }
+  if (d.t === "state") {
+    if (G.me < 0) { G.net.send({ t: "hello", cid: G.cid, p: { name: myName(), small: profile.small } }); return; }
+    const v = validView(d.s); if (!v || v.players.length !== G.seats.length) return;
+    // the host hasn't seen our latest move yet: keep showing it instead of jumping back
+    if (G.pend && Number.isInteger(d.ack) && d.ack < G.pend.id) return;
+    clearPend();
+    if (G.view && v.seq < G.view.seq) return;
+    const first = !G.view; G.view = v;
+    if (first) { G.greeted = true; clearTimeout(G.gaveUp); msg.textContent = ""; resetMarks(); show("game"); }
+    render();
+  }
 }
 
 // lobby list of open tables (artifact rooms only)
@@ -1255,8 +1469,8 @@ async function startLobby() {
     const open = peers.filter(p => !p.isMe && p.presence && typeof p.presence.table === "string" && /^[A-Z0-9]{5}$/.test(p.presence.table));
     if (!open.length) { box.appendChild(el("p", "note", t("noTables"))); return; }
     open.forEach(p => {
-      const row = el("div", "table-item");
-      row.appendChild(el("span", null, String(p.presence.host || "?").slice(0, 20) + " · " + p.presence.table));
+      const row = el("div", "table-item"), n = Number.isInteger(p.presence.n) ? " · " + t("players", { a: p.presence.n }) : "";
+      row.appendChild(el("span", null, String(p.presence.host || "?").slice(0, 20) + " · " + p.presence.table + n));
       row.appendChild(button("primary", t("joinRoom"), () => joinTable(p.presence.table)));
       box.appendChild(row);
     });
@@ -1267,9 +1481,8 @@ async function startLobby() {
 
 $("#playAiBtn").addEventListener("click", startAI);
 $("#playOnlineBtn").addEventListener("click", () => { $("#onlineMsg").textContent = ""; show("online"); startLobby(); });
-$("#onlineBack").addEventListener("click", () => { cancelHost(); show("home"); });
+$("#onlineBack").addEventListener("click", () => show("home"));
 $("#createBtn").addEventListener("click", createTable);
-$("#cancelHost").addEventListener("click", cancelHost);
 $("#joinBtn").addEventListener("click", () => joinTable($("#codeInput").value));
 $("#codeInput").addEventListener("keydown", e => { if (e.key === "Enter") joinTable($("#codeInput").value); });
 // Invite through the phone's share sheet (KakaoTalk, messages, ...); copy the link where that isn't available.
@@ -1289,8 +1502,8 @@ $("#overlay").addEventListener("click", e => { if (e.target.id === "overlay" && 
 /* ================= boot ================= */
 function boot(data) {
   renderSoundBtn(); renderHome();
-  if (data && data.state && data.mode === "ai") {
-    G = { mode: "ai", me: 0, opp: { name: t("computer"), small: null, ai: true }, state: data.state, level: data.level || diff };
+  if (data && data.state && data.mode === "ai" && Array.isArray(data.seats) && data.seats.length === data.state.players.length) {
+    G = { mode: "ai", me: 0, seats: data.seats, state: data.state };
     resetMarks(); show("game"); afterChange(); return;
   }
   const m = /^#join-([A-Za-z0-9]{5})$/.exec(location.hash || "");
@@ -1298,7 +1511,7 @@ function boot(data) {
   show("home");
 }
 const hot = window.claude && window.claude.hot;
-if (hot && hot.snapshot) hot.snapshot(() => (G && G.mode === "ai" ? { mode: "ai", state: G.state, level: G.level } : {}));
+if (hot && hot.snapshot) hot.snapshot(() => (G && G.mode === "ai" ? { mode: "ai", state: G.state, seats: G.seats } : {}));
 if (hot && hot.ready) hot.ready(boot); else boot(hot && hot.data ? hot.data : {});
 </script>
 </body>
